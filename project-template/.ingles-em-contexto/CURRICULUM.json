@@ -1,0 +1,26 @@
+{
+  "schema_version": 6,
+  "mode": "accelerated",
+  "sprint": {
+    "series": null,
+    "target_episodes": 8,
+    "completed": 0
+  },
+  "allocation": {
+    "global_chunks": 0.55,
+    "episode_critical": 0.25,
+    "listening": 0.1,
+    "personal_gap": 0.1
+  },
+  "weekly_target": {
+    "deep": 1,
+    "extensive": 2,
+    "micro_retrievals": 5,
+    "production_sessions": 2
+  },
+  "efficiency_goal": {
+    "target_reduction_percent": 35,
+    "stretch_reduction_percent": 50,
+    "guarantee": false
+  }
+}

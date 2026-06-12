@@ -1,0 +1,11 @@
+{
+  "schema_version": 6,
+  "runtime": "study-memory-v6",
+  "revision": 0,
+  "created_at": null,
+  "updated_at": null,
+  "last_event_id": 0,
+  "events_count": 0,
+  "episodes_completed": 0,
+  "last_compacted_event_id": 0
+}
