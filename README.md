@@ -14,7 +14,7 @@ Você executa.
 
 Conteúdo de inglês não falta.
 
-O que trava muita gente e isto:
+O que trava muita gente é isto:
 
 ```text
 O que eu estudo hoje?
@@ -161,6 +161,7 @@ Principais módulos:
 
 ```text
 fluentpilot_health.ts diagnóstico de instalação/tools
+fluentpilot_runtime.ts helpers de runtime e compatibilidade
 study_memory.ts      memória pedagógica
 learning_engine.ts   cobertura, revisão e sessões
 snowball_core.ts     funções puras testáveis

@@ -1,8 +1,10 @@
 import { tool } from "@opencode-ai/plugin"
 import { access, readdir } from "node:fs/promises"
 import path from "node:path"
+import { projectDirectory } from "./fluentpilot_runtime.ts"
 
 const REQUIRED_TOOL_FILES = [
+  "fluentpilot_runtime.ts",
   "study_memory.ts",
   "learning_engine.ts",
   "snowball_core.ts",
@@ -24,6 +26,7 @@ export default tool({
   description: "Diagnose whether FluentPilot tools and local state are visible to OpenCode.",
   args: {},
   async execute(_args, context) {
+    context.directory = await projectDirectory(context.directory)
     const projectToolsDir = path.join(context.directory, ".opencode", "tools")
     const stateDir = path.join(context.directory, ".ingles-em-contexto")
     const projectToolFiles = await exists(projectToolsDir)

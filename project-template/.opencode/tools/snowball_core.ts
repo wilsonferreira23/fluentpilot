@@ -470,8 +470,8 @@ const OBJECTIVE_TRACKS: Record<string, JsonObject> = {
   },
 }
 
-export function selectObjectiveTrack(objective: string): JsonObject {
-  const key = normalizeTerm(objective).replace(/\s+/g, "_")
+export function selectObjectiveTrack(objective?: string | null): JsonObject {
+  const key = normalizeTerm(String(objective ?? "general")).replace(/\s+/g, "_")
   if (["travel", "viagem", "viajar"].includes(key)) return OBJECTIVE_TRACKS.travel
   if (["conversation", "conversa", "conversacao", "conversação"].includes(key)) return OBJECTIVE_TRACKS.conversation
   if (["work", "trabalho", "estudo", "job"].includes(key)) return OBJECTIVE_TRACKS.work
@@ -685,21 +685,22 @@ export function buildReturnMode(args: {
 
 export function buildProductionFirstDrill(args: {
   chunk: string
-  objective: string
+  objective?: string
 }): JsonObject {
   const track = selectObjectiveTrack(args.objective)
   const contexts = track.visible_focus as string[]
+  const chunk = String(args.chunk ?? "I need to")
   return {
-    chunk: args.chunk,
+    chunk,
     objective: track.id,
     required_order: ["see", "hear", "use"],
     can_continue_before_production: false,
     production_questions: [
-      `Use "${args.chunk}" para responder sobre ${contexts[0]}.`,
-      `Faça uma pergunta usando "${args.chunk}".`,
-      `Responda rápido usando "${args.chunk}" sem traduzir.`,
-      `Use "${args.chunk}" em uma situação real sua.`,
-      `Mude a frase com "${args.chunk}" para outro contexto.`,
+      `Use "${chunk}" para responder sobre ${contexts[0]}.`,
+      `Faça uma pergunta usando "${chunk}".`,
+      `Responda rápido usando "${chunk}" sem traduzir.`,
+      `Use "${chunk}" em uma situação real sua.`,
+      `Mude a frase com "${chunk}" para outro contexto.`,
     ],
     rule: "Todo chunk novo precisa ser usado na mesma sessão antes de continuar.",
   }

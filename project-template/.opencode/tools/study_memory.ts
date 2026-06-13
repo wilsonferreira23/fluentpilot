@@ -14,6 +14,7 @@ import {
 } from "node:fs/promises"
 import path from "node:path"
 import crypto from "node:crypto"
+import { projectDirectory } from "./fluentpilot_runtime.ts"
 
 type JsonObject = Record<string, unknown>
 
@@ -294,6 +295,7 @@ export const bootstrap = tool({
     "Initialize and verify the FluentPilot memory files. Call before every study session.",
   args: {},
   async execute(_args, context) {
+    context.directory = await projectDirectory(context.directory)
     const result = await ensureMemory(context.directory)
     return JSON.stringify({
       ok: true,
@@ -308,6 +310,7 @@ export const get_state = tool({
     "Read the authoritative current study state and metadata. Must be called before responding to study requests.",
   args: {},
   async execute(_args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureMemory(context.directory)
     const [state, meta] = await Promise.all([
       readFile(memoryPath(context.directory, STATE_FILE), "utf8"),
@@ -341,6 +344,7 @@ export const patch_state = tool({
       .describe("Revision returned by get_state, used to prevent stale writes"),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureMemory(context.directory)
     return await withLock(context.directory, async () => {
       const meta = await getMeta(context.directory)
@@ -404,6 +408,7 @@ export const append_event = tool({
     source: tool.schema.string().default("agent"),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureMemory(context.directory)
     let payload: JsonObject
     try {
@@ -424,7 +429,7 @@ export const append_event = tool({
         context.directory,
         args.type,
         payload,
-        args.source,
+        args.source ?? "agent",
       )
       return JSON.stringify({ ok: true, event })
     })
@@ -440,6 +445,7 @@ export const get_events = tool({
     after_id: tool.schema.number().int().nonnegative().optional(),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureMemory(context.directory)
     const raw = await readFile(memoryPath(context.directory, EVENTS_FILE), "utf8")
     const events: JsonObject[] = []
@@ -464,7 +470,7 @@ export const get_events = tool({
 
     return JSON.stringify({
       ok: invalidLines.length === 0,
-      events: events.slice(-args.limit),
+      events: events.slice(-(args.limit ?? 20)),
       invalid_lines: invalidLines,
     })
   },
@@ -487,6 +493,7 @@ export const update_mastery = tool({
     context_example: tool.schema.string().max(500).optional(),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureMemory(context.directory)
     return await withLock(context.directory, async () => {
       const filePath = memoryPath(context.directory, MASTERY_FILE)
@@ -524,14 +531,14 @@ export const update_mastery = tool({
         0,
         Math.min(
           5,
-          Number(previous.recognition_level ?? 0) + args.recognition_delta,
+          Number(previous.recognition_level ?? 0) + (args.recognition_delta ?? 0),
         ),
       )
       const production = Math.max(
         0,
         Math.min(
           5,
-          Number(previous.production_level ?? 0) + args.production_delta,
+          Number(previous.production_level ?? 0) + (args.production_delta ?? 0),
         ),
       )
 
@@ -587,6 +594,7 @@ export const get_mastery = tool({
     term: tool.schema.string().min(1),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureMemory(context.directory)
     const mastery = await readJson<{
       items: Record<string, JsonObject>
@@ -608,6 +616,7 @@ export const get_due_reviews = tool({
     limit: tool.schema.number().int().min(1).max(20).default(7),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureMemory(context.directory)
     const mastery = await readJson<{
       items: Record<string, JsonObject>
@@ -630,7 +639,7 @@ export const get_due_reviews = tool({
           Number(b.production_level ?? 0)
         return masteryA - masteryB
       })
-      .slice(0, args.limit)
+      .slice(0, args.limit ?? 7)
 
     return JSON.stringify({ ok: true, due })
   },
@@ -654,6 +663,7 @@ export const finish_episode = tool({
     expected_revision: tool.schema.number().int().nonnegative().optional(),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureMemory(context.directory)
 
     let summary: JsonObject
@@ -736,6 +746,7 @@ export const validate = tool({
     repair: tool.schema.boolean().default(false),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureMemory(context.directory)
 
     return await withLock(context.directory, async () => {
@@ -761,7 +772,7 @@ export const validate = tool({
       } catch (error) {
         issues.push(`META.json invalid: ${String(error)}`)
         meta = { ...INITIAL_META }
-        if (args.repair) {
+        if (args.repair ?? false) {
           await backupFile(context.directory, META_FILE)
           await saveMeta(context.directory, meta)
           repairs.push("Recreated META.json")
@@ -778,7 +789,7 @@ export const validate = tool({
         }
       } catch (error) {
         issues.push(`MASTERY.json invalid: ${String(error)}`)
-        if (args.repair) {
+        if (args.repair ?? false) {
           await backupFile(context.directory, MASTERY_FILE)
           await atomicWriteJson(masteryPath, INITIAL_MASTERY)
           repairs.push("Recreated MASTERY.json")
@@ -809,7 +820,7 @@ export const validate = tool({
         Number(meta.last_event_id ?? 0) !== lastEventId
       ) {
         issues.push("META.json event counters do not match EVENTS.jsonl")
-        if (args.repair) {
+        if (args.repair ?? false) {
           meta.events_count = validEvents
           meta.last_event_id = lastEventId
           meta.updated_at = now()
@@ -820,7 +831,7 @@ export const validate = tool({
 
       if (Number(meta.schema_version ?? 0) !== SCHEMA_VERSION) {
         issues.push(`META.json schema_version is not ${SCHEMA_VERSION}`)
-        if (args.repair) {
+        if (args.repair ?? false) {
           meta.schema_version = SCHEMA_VERSION
           meta.updated_at = now()
           await saveMeta(context.directory, meta)
@@ -829,7 +840,7 @@ export const validate = tool({
       }
 
       return JSON.stringify({
-        ok: issues.length === 0 || (args.repair && invalidLines.length === 0),
+        ok: issues.length === 0 || ((args.repair ?? false) && invalidLines.length === 0),
         schema_version: SCHEMA_VERSION,
         issues,
         repairs,
@@ -851,6 +862,7 @@ export const migrate_legacy = tool({
     dry_run: tool.schema.boolean().default(true),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureMemory(context.directory)
     const base = memoryPath(context.directory)
     const names = await readdir(base)
@@ -874,7 +886,7 @@ export const migrate_legacy = tool({
       }
     }
 
-    if (args.dry_run) {
+    if (args.dry_run ?? true) {
       return JSON.stringify({
         ok: errors.length === 0,
         dry_run: true,

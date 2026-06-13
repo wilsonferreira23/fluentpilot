@@ -9,6 +9,7 @@ const requiredFiles = [
   "project-template/MEMORY_RULES.md",
   "project-template/opencode.json",
   "project-template/.opencode/tools/fluentpilot_health.ts",
+  "project-template/.opencode/tools/fluentpilot_runtime.ts",
   "docs/METHOD.md",
   "docs/OPENCODE_AGENT_GUIDE.md",
   "docs/LLM_BEHAVIOR_GUIDE.md",

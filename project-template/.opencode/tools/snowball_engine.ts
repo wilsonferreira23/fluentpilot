@@ -36,6 +36,12 @@ import {
   type SnowballCue,
   type SnowballEpisode,
 } from "./snowball_core.ts"
+import {
+  parseJsonArray,
+  parseJsonObject,
+  projectDirectory,
+  sanitizeEpisodeId,
+} from "./fluentpilot_runtime.ts"
 
 type JsonObject = Record<string, any>
 
@@ -260,7 +266,7 @@ async function loadSubtitleEpisodes(directory: string, subtitlePaths: string[]):
     const fullPath = resolveInput(directory, input)
     const raw = await readFile(fullPath, "utf8")
     episodes.push({
-      episode_id: path.basename(input, path.extname(input)),
+      episode_id: sanitizeEpisodeId(input),
       path: input,
       cues: parseSubtitle(raw),
     })
@@ -290,6 +296,7 @@ export const bootstrap = tool({
   description: "Initialize Snowball/V7 language-capital files.",
   args: {},
   async execute(_args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
     return JSON.stringify({ ok: true, schema_version: SNOWBALL_VERSION })
   },
@@ -304,23 +311,25 @@ export const analyze_season = tool({
     top_candidates: tool.schema.number().int().min(10).max(80).default(50),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
     let subtitlePaths: string[]
     let knownTerms: string[]
     try {
       subtitlePaths = JSON.parse(args.subtitle_paths_json)
-      knownTerms = JSON.parse(args.known_terms_json)
+      knownTerms = parseJsonArray<string>(args.known_terms_json)
       if (!Array.isArray(subtitlePaths) || !Array.isArray(knownTerms)) throw new Error("arrays required")
     } catch (error) {
       return JSON.stringify({ ok: false, error: "invalid_json", detail: String(error) })
     }
+    const topCandidates = args.top_candidates ?? 50
 
     const episodes = await loadSubtitleEpisodes(context.directory, subtitlePaths)
     const result = analyzeSeasonCorpus({
       episodes,
       knownTerms,
       masteryItems: { ...(await masteryItems(context.directory)), ...(await capitalItems(context.directory)) },
-      topCandidates: args.top_candidates,
+      topCandidates,
     })
 
     await atomicJson(memoryPath(context.directory, SERIES_CORPUS_FILE), {
@@ -341,6 +350,7 @@ export const score_future_value = tool({
     chunk: tool.schema.string().min(1),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
     const corpus = await readJson<JsonObject>(memoryPath(context.directory, SERIES_CORPUS_FILE), INITIAL_SERIES_CORPUS)
     const key = normalizeTerm(args.chunk)
@@ -357,11 +367,13 @@ export const select_compounding_items = tool({
     limit: tool.schema.number().int().min(1).max(12).default(6),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
     const corpus = await readJson<JsonObject>(memoryPath(context.directory, SERIES_CORPUS_FILE), INITIAL_SERIES_CORPUS)
     const debt = await readJson<JsonObject>(memoryPath(context.directory, DEBT_FILE), INITIAL_DEBT)
     const throttle = Number(debt.new_item_throttle ?? 1)
-    const effectiveLimit = Math.max(1, Math.floor(args.limit * throttle))
+    const limit = args.limit ?? 6
+    const effectiveLimit = Math.max(1, Math.floor(limit * throttle))
     const chunks = Object.values(corpus.chunks ?? {})
       .filter((item: any) => item.first_episode === args.episode_id || item.future_episodes?.includes(args.episode_id))
       .sort((a: any, b: any) => Number(b.estimated_future_value ?? 0) - Number(a.estimated_future_value ?? 0))
@@ -370,7 +382,7 @@ export const select_compounding_items = tool({
       ok: true,
       episode_id: args.episode_id,
       debt_recommendation: debt.recommendation ?? "normal",
-      requested_limit: args.limit,
+      requested_limit: limit,
       effective_limit: effectiveLimit,
       items: chunks,
     })
@@ -384,6 +396,7 @@ export const promote_incidental_item = tool({
     evidence_json: tool.schema.string().describe("JSON array of evidence events: episode_id/action"),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
     let evidence: Array<{ episode_id?: string; action: string }>
     try {
@@ -424,6 +437,7 @@ export const calculate_automaticity_debt = tool({
   description: "Calculate the gap between recognition/listening and production/automaticity and save throttling guidance.",
   args: {},
   async execute(_args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
     const capital = await capitalItems(context.directory)
     const debt = {
@@ -443,11 +457,12 @@ export const build_future_review = tool({
     days_ahead: tool.schema.number().int().min(0).max(7).default(1),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
     const corpus = await readJson<JsonObject>(memoryPath(context.directory, SERIES_CORPUS_FILE), INITIAL_SERIES_CORPUS)
     const review = buildFutureReview({
       targetEpisodeId: args.target_episode_id,
-      daysAhead: args.days_ahead,
+      daysAhead: args.days_ahead ?? 1,
       seriesCorpus: corpus,
       capital: await capitalItems(context.directory),
     })
@@ -462,7 +477,7 @@ export const measure_assistance_decay = tool({
   },
   async execute(args) {
     try {
-      const episodeMetrics = JSON.parse(args.episode_metrics_json)
+      const episodeMetrics = parseJsonArray(args.episode_metrics_json)
       if (!Array.isArray(episodeMetrics)) throw new Error("array required")
       return JSON.stringify({ ok: true, ...calculateFlywheel({ episodeMetrics }) })
     } catch (error) {
@@ -479,20 +494,22 @@ export const generate_transfer_task = tool({
     learner_context: tool.schema.string().optional(),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
+    const exposureCount = args.exposure_count ?? 1
     const task = generateTransferTask({
       chunk: args.chunk,
-      exposureCount: args.exposure_count,
+      exposureCount,
       learnerContext: args.learner_context,
     })
     const graph = await readJson<{ tasks?: JsonObject; edges?: JsonObject[] }>(
       memoryPath(context.directory, TRANSFER_GRAPH_FILE),
       INITIAL_TRANSFER_GRAPH,
     )
-    const id = `${normalizeTerm(args.chunk)}:${args.exposure_count}`
+    const id = `${normalizeTerm(args.chunk)}:${exposureCount}`
     graph.schema_version = SNOWBALL_VERSION
     graph.tasks = graph.tasks ?? {}
-    graph.tasks[id] = { ...task, chunk: normalizeTerm(args.chunk), exposure_count: args.exposure_count, updated_at: now() }
+    graph.tasks[id] = { ...task, chunk: normalizeTerm(args.chunk), exposure_count: exposureCount, updated_at: now() }
     await atomicJson(memoryPath(context.directory, TRANSFER_GRAPH_FILE), graph)
     return JSON.stringify({ ok: true, task: graph.tasks[id] })
   },
@@ -505,10 +522,11 @@ export const select_next_episode = tool({
     episode_metrics_json: tool.schema.string().default("[]").describe("Optional JSON array of recent episode metrics"),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
     try {
       const episodeIds = JSON.parse(args.episode_ids_json)
-      const episodeMetrics = JSON.parse(args.episode_metrics_json)
+      const episodeMetrics = parseJsonArray(args.episode_metrics_json)
       if (!Array.isArray(episodeIds) || !Array.isArray(episodeMetrics)) throw new Error("arrays required")
       const flywheel = calculateFlywheel({
         episodeMetrics,
@@ -529,6 +547,7 @@ export const calculate_flywheel = tool({
     episode_metrics_json: tool.schema.string().describe("JSON array of episode metric objects"),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
     try {
       const episodeMetrics = JSON.parse(args.episode_metrics_json)
@@ -553,10 +572,11 @@ export const schedule_blind_test = tool({
     prepared_episode_ids_json: tool.schema.string().default("[]").describe("JSON array of already prepared episode IDs"),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
     try {
       const candidateEpisodeIds = JSON.parse(args.candidate_episode_ids_json)
-      const preparedEpisodeIds = JSON.parse(args.prepared_episode_ids_json)
+      const preparedEpisodeIds = parseJsonArray<string>(args.prepared_episode_ids_json)
       if (!Array.isArray(candidateEpisodeIds) || !Array.isArray(preparedEpisodeIds)) throw new Error("arrays required")
 
       const blindState = await readJson<JsonObject>(memoryPath(context.directory, BLIND_TESTS_FILE), INITIAL_BLIND_TESTS)
@@ -591,6 +611,7 @@ export const build_oral_routine = tool({
     chunks_json: tool.schema.string().describe("JSON array of chunks from the episode"),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
     try {
       const chunks = JSON.parse(args.chunks_json)
@@ -617,10 +638,10 @@ export const simplify_commands = tool({
   },
   async execute(args) {
     try {
-      const availableCommands = JSON.parse(args.available_commands_json)
+      const availableCommands = parseJsonArray<string>(args.available_commands_json)
       if (!Array.isArray(availableCommands)) throw new Error("array required")
       const result = simplifyVisibleCommands({
-        requestedDetails: args.requested_details,
+        requestedDetails: args.requested_details ?? false,
         availableCommands: availableCommands.length ? availableCommands : undefined,
       })
       return JSON.stringify({ ok: true, ...result })
@@ -636,6 +657,7 @@ export const select_objective_track = tool({
     objective: tool.schema.enum(["travel", "conversation", "work", "media", "general"]),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
     const track = selectObjectiveTrack(args.objective)
     const state = await readJson<JsonObject>(memoryPath(context.directory, REAL_LIFE_FILE), INITIAL_REAL_LIFE)
@@ -657,16 +679,18 @@ export const build_real_life_transfer = tool({
     learner_context: tool.schema.string().optional(),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
+    const objective = args.objective ?? "general"
     const transfer = buildRealLifeTransfer({
       chunk: args.chunk,
-      objective: args.objective,
+      objective,
       learnerContext: args.learner_context,
     })
     const state = await readJson<JsonObject>(memoryPath(context.directory, REAL_LIFE_FILE), INITIAL_REAL_LIFE)
     state.schema_version = SNOWBALL_VERSION
     state.objective = transfer.objective
-    state.track = selectObjectiveTrack(args.objective)
+    state.track = selectObjectiveTrack(objective)
     state.transfers = Array.isArray(state.transfers) ? state.transfers : []
     state.transfers.push({ ...transfer, created_at: now() })
     await atomicJson(memoryPath(context.directory, REAL_LIFE_FILE), state)
@@ -685,14 +709,17 @@ export const build_daily_mission = tool({
     learner_context: tool.schema.string().optional(),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
     try {
-      const dueReviews = JSON.parse(args.due_reviews_json)
-      const candidateChunks = JSON.parse(args.candidate_chunks_json)
+      const dueReviews = parseJsonArray<JsonObject>(args.due_reviews_json)
+      const candidateChunks = parseJsonArray<string>(args.candidate_chunks_json)
       if (!Array.isArray(dueReviews) || !Array.isArray(candidateChunks)) throw new Error("arrays required")
+      const objective = args.objective ?? "general"
+      const energy = args.energy ?? "medium"
       const mission = buildDailyMission({
-        objective: args.objective,
-        energy: args.energy,
+        objective,
+        energy,
         dueReviews,
         candidateChunks,
         learnerContext: args.learner_context,
@@ -721,14 +748,15 @@ export const calculate_fluency_score = tool({
     consistency_days: tool.schema.number().int().min(0).default(0),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
     const score = calculateFluencyScore({
-      automaticChunks: args.automatic_chunks,
-      oralResponses: args.oral_responses,
-      realLifeTransfers: args.real_life_transfers,
-      blindComprehensionAverage: args.blind_comprehension_average,
-      autonomyRatio: args.autonomy_ratio,
-      consistencyDays: args.consistency_days,
+      automaticChunks: args.automatic_chunks ?? 0,
+      oralResponses: args.oral_responses ?? 0,
+      realLifeTransfers: args.real_life_transfers ?? 0,
+      blindComprehensionAverage: args.blind_comprehension_average ?? 0,
+      autonomyRatio: args.autonomy_ratio ?? 0,
+      consistencyDays: args.consistency_days ?? 0,
     })
     const state = await readJson<JsonObject>(memoryPath(context.directory, FLUENCY_SCORE_FILE), INITIAL_FLUENCY_SCORE)
     state.schema_version = SNOWBALL_VERSION
@@ -751,6 +779,7 @@ export const complete_daily_mission = tool({
     next_step: tool.schema.string().min(1),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
     try {
       const completedTasks = JSON.parse(args.completed_tasks_json)
@@ -784,10 +813,11 @@ export const build_war_mode = tool({
     learner_context: tool.schema.string().optional(),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
     const mode = buildWarMode({
       chunk: args.chunk,
-      objective: args.objective,
+      objective: args.objective ?? "general",
       learnerContext: args.learner_context,
     })
     const state = await readJson<JsonObject>(memoryPath(context.directory, FAST_MODES_FILE), INITIAL_FAST_MODES)
@@ -807,9 +837,10 @@ export const build_return_mode = tool({
     chunks_json: tool.schema.string().default("[]").describe("JSON array of chunks to recover"),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
     try {
-      const chunks = JSON.parse(args.chunks_json)
+      const chunks = parseJsonArray<string>(args.chunks_json)
       if (!Array.isArray(chunks)) throw new Error("array required")
       const mode = buildReturnMode({ daysAway: args.days_away, chunks })
       const state = await readJson<JsonObject>(memoryPath(context.directory, FAST_MODES_FILE), INITIAL_FAST_MODES)
@@ -832,8 +863,9 @@ export const build_production_first_drill = tool({
     objective: tool.schema.enum(["travel", "conversation", "work", "media", "general"]).default("general"),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
-    const drill = buildProductionFirstDrill({ chunk: args.chunk, objective: args.objective })
+    const drill = buildProductionFirstDrill({ chunk: args.chunk, objective: args.objective ?? "general" })
     await appendMetric(context.directory, "snowball.production_first_drill", drill)
     return JSON.stringify({ ok: true, drill })
   },
@@ -847,10 +879,11 @@ export const build_speaking_reps_drill = tool({
     learner_context: tool.schema.string().optional(),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
     const drill = buildSpeakingRepsDrill({
       chunk: args.chunk,
-      objective: args.objective,
+      objective: args.objective ?? "general",
       learnerContext: args.learner_context,
     })
     const state = await readJson<JsonObject>(memoryPath(context.directory, SPEAKING_DRILLS_FILE), INITIAL_SPEAKING_DRILLS)
@@ -871,11 +904,12 @@ export const build_captionless_listening_drill = tool({
     difficulty: tool.schema.enum(["easy", "medium", "hard"]).default("easy"),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
     const drill = buildCaptionlessListeningDrill({
       clipId: args.clip_id,
       transcript: args.transcript,
-      difficulty: args.difficulty,
+      difficulty: args.difficulty ?? "easy",
     })
     const state = await readJson<JsonObject>(memoryPath(context.directory, LISTENING_DRILLS_FILE), INITIAL_LISTENING_DRILLS)
     state.schema_version = SNOWBALL_VERSION
@@ -895,12 +929,13 @@ export const build_unpredictable_conversation_drill = tool({
     surprise: tool.schema.string().optional(),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
     try {
-      const chunks = JSON.parse(args.chunks_json)
+      const chunks = parseJsonArray<string>(args.chunks_json)
       if (!Array.isArray(chunks)) throw new Error("array required")
       const drill = buildUnpredictableConversationDrill({
-        objective: args.objective,
+        objective: args.objective ?? "general",
         chunks,
         surprise: args.surprise,
       })
@@ -927,10 +962,11 @@ export const functional_capability_dashboard = tool({
     score_json: tool.schema.string().default("{}").describe("Optional JSON object with score and max"),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureSnowball(context.directory)
     try {
       const capabilities = JSON.parse(args.capabilities_json)
-      const score = JSON.parse(args.score_json)
+      const score = parseJsonObject(args.score_json, {})
       if (!capabilities || Array.isArray(capabilities) || typeof capabilities !== "object") throw new Error("object required")
       const dashboard = buildFunctionalCapabilityDashboard({
         capabilities,

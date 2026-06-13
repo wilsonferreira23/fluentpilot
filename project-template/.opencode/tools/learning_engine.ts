@@ -9,6 +9,13 @@ import {
 } from "node:fs/promises"
 import path from "node:path"
 import crypto from "node:crypto"
+import {
+  isOnboardingProject,
+  modeFromCoverage,
+  parseJsonArray,
+  projectDirectory,
+  sanitizeEpisodeId,
+} from "./fluentpilot_runtime.ts"
 
 type JsonObject = Record<string, unknown>
 
@@ -225,39 +232,16 @@ function modeFrom(
   coverage: number,
   recentComprehension: number,
   highValueNewItems: number,
+  options: { onboarding?: boolean } = {},
 ): { mode: string; reason: string; support: string } {
-  if (coverage >= 0.94 && recentComprehension >= 82 && highValueNewItems <= 4) {
-    return {
-      mode: "extensive",
-      reason: "Alta cobertura e baixa carga de novidade.",
-      support: "Preteste curto, até 3 chunks e pós-teste.",
-    }
-  }
-  if (coverage >= 0.88) {
-    return {
-      mode: "deep",
-      reason: "Zona ideal de desafio para estudo profundo.",
-      support: "Plano completo com áudio, recuperação e transferência.",
-    }
-  }
-  if (coverage >= 0.82) {
-    return {
-      mode: "challenge",
-      reason: "Carga elevada, mas ainda utilizável com apoio extra.",
-      support: "Reduzir itens, aumentar contexto e manter legenda completa.",
-    }
-  }
-  return {
-    mode: "not_ideal",
-    reason: "Cobertura baixa; o custo pedagógico provável é alto.",
-    support: "Escolher episódio mais acessível ou aceitar modo desafio.",
-  }
+  return modeFromCoverage(coverage, recentComprehension, highValueNewItems, options)
 }
 
 export const bootstrap = tool({
   description: "Initialize V6 learning-engine files.",
   args: {},
   async execute(_args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureEngine(context.directory)
     return JSON.stringify({ ok: true, schema_version: ENGINE_VERSION })
   },
@@ -278,18 +262,22 @@ export const analyze_subtitles = tool({
     top_candidates: tool.schema.number().int().min(5).max(100).default(30),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureEngine(context.directory)
     let subtitlePaths: string[]
     let extraKnown: string[]
     try {
       subtitlePaths = JSON.parse(args.subtitle_paths_json)
-      extraKnown = JSON.parse(args.known_terms_json)
+      extraKnown = parseJsonArray<string>(args.known_terms_json)
       if (!Array.isArray(subtitlePaths) || !Array.isArray(extraKnown)) throw new Error("arrays required")
     } catch (error) {
       return JSON.stringify({ ok: false, error: "invalid_json", detail: String(error) })
     }
 
     const known = await knownTerms(context.directory, extraKnown)
+    const onboarding = await isOnboardingProject(context.directory)
+    const saveIndex = args.save_index ?? true
+    const topCandidates = args.top_candidates ?? 30
     const tokenCounts = new Map<string, number>()
     const tokenDocs = new Map<string, Set<string>>()
     const phraseCounts = new Map<string, number>()
@@ -300,7 +288,7 @@ export const analyze_subtitles = tool({
       const fullPath = resolveInput(context.directory, input)
       const raw = await readFile(fullPath, "utf8")
       const cues = parseSubtitle(raw)
-      const episodeId = path.basename(input, path.extname(input))
+      const episodeId = sanitizeEpisodeId(input)
       const tokens = cues.flatMap((cue) => tokenize(cue.text))
       let knownOccurrences = 0
 
@@ -334,7 +322,7 @@ export const analyze_subtitles = tool({
         .slice(0, 20)
         .map(([term, frequency]) => ({ term, frequency }))
 
-      const recommendation = modeFrom(coverage, 80, Math.min(20, unknownTop.length))
+      const recommendation = modeFrom(coverage, 80, Math.min(20, unknownTop.length), { onboarding })
       analyses.push({
         episode_id: episodeId,
         path: input,
@@ -382,12 +370,12 @@ export const analyze_subtitles = tool({
     }
 
     candidates.sort((a, b) => b.score - a.score)
-    const selected = candidates.slice(0, args.top_candidates).map(({ score, ...rest }) => ({
+    const selected = candidates.slice(0, topCandidates).map(({ score, ...rest }) => ({
       ...rest,
       score: Number(score.toFixed(3)),
     }))
 
-    if (args.save_index) {
+    if (saveIndex) {
       const indexPath = basePath(context.directory, EPISODE_INDEX_FILE)
       const index = await readJson<{schema_version: number; episodes: Record<string, unknown>; corpus: JsonObject}>(
         indexPath,
@@ -426,10 +414,13 @@ export const select_episode_mode = tool({
     has_audio: tool.schema.boolean().default(false),
   },
   async execute(args) {
+    const recentComprehension = args.recent_comprehension ?? 80
+    const highValueNewItems = args.high_value_new_items ?? 6
+    const hasAudio = args.has_audio ?? false
     const result = modeFrom(
       args.lexical_coverage,
-      args.recent_comprehension,
-      args.high_value_new_items,
+      recentComprehension,
+      highValueNewItems,
     )
     const caption_ladder =
       result.mode === "extensive"
@@ -441,7 +432,7 @@ export const select_episode_mode = tool({
     return JSON.stringify({
       ok: true,
       ...result,
-      audio_verified_possible: args.has_audio,
+      audio_verified_possible: hasAudio,
       caption_ladder,
     })
   },
@@ -459,9 +450,14 @@ export const build_session_plan = tool({
     has_audio: tool.schema.boolean().default(false),
   },
   async execute(args) {
-    const minutes = args.energy === "low" ? 7 : args.energy === "high" ? 18 : 14
-    const newCap = args.energy === "low" ? 2 : args.energy === "high" ? 5 : 4
-    const actualNew = Math.min(args.new_items, newCap)
+    const energy = args.energy ?? "medium"
+    const dueReviews = args.due_reviews ?? 3
+    const newItems = args.new_items ?? 5
+    const hasAudio = args.has_audio ?? false
+    const phase = args.phase ?? 0
+    const minutes = energy === "low" ? 7 : energy === "high" ? 18 : 14
+    const newCap = energy === "low" ? 2 : energy === "high" ? 5 : 4
+    const actualNew = Math.min(newItems, newCap)
     const tasks: JsonObject[] = []
 
     tasks.push({
@@ -471,20 +467,20 @@ export const build_session_plan = tool({
       objective: "Recuperar um item conhecido e gerar impulso.",
     })
 
-    if (args.due_reviews > 0) {
+    if (dueReviews > 0) {
       tasks.push({
         id: "retrieval",
-        minutes: args.energy === "low" ? 2 : 4,
+        minutes: energy === "low" ? 2 : 4,
         cost: "medium",
-        items: Math.min(args.due_reviews, args.energy === "low" ? 2 : 5),
+        items: Math.min(dueReviews, energy === "low" ? 2 : 5),
         objective: "Recuperação atrasada antes de novo conteúdo.",
       })
     }
 
-    if (args.has_audio) {
+    if (hasAudio) {
       tasks.push({
         id: "perception_triad",
-        minutes: args.energy === "low" ? 2 : 4,
+        minutes: energy === "low" ? 2 : 4,
         cost: "high",
         objective: "Ouvir sem texto, receber suporte e ouvir novamente.",
       })
@@ -501,17 +497,17 @@ export const build_session_plan = tool({
     } else {
       tasks.push({
         id: "encoding",
-        minutes: args.energy === "low" ? 2 : 4,
+        minutes: energy === "low" ? 2 : 4,
         cost: "medium",
         new_items: actualNew,
         objective: "Aprender chunks de maior transferência.",
       })
     }
 
-    if (args.phase >= 1 && args.energy !== "low") {
+    if (phase >= 1 && energy !== "low") {
       tasks.push({
         id: "production",
-        minutes: args.phase >= 3 ? 4 : 2,
+        minutes: phase >= 3 ? 4 : 2,
         cost: "high",
         objective: "Usar um padrão em contexto próprio.",
       })
@@ -540,7 +536,9 @@ export const schedule_review = tool({
     transferred: tool.schema.boolean().default(false),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureEngine(context.directory)
+    const transferred = args.transferred ?? false
     const file = basePath(context.directory, MODEL_FILE)
     const model = await readJson<{schema_version: number; items: Record<string, JsonObject>}>(
       file,
@@ -566,7 +564,7 @@ export const schedule_review = tool({
       stability = Math.max(2, stability * (2.5 + (10 - difficulty) * 0.05))
     }
 
-    if (args.transferred) stability *= 1.15
+    if (transferred) stability *= 1.15
     stability = Math.min(180, stability)
     const due = new Date(Date.now() + stability * 86_400_000).toISOString()
 
@@ -592,7 +590,7 @@ export const schedule_review = tool({
       production_level: args.production_level ?? previous.production_level ?? 0,
       contexts: [...contexts],
       voices: [...voices],
-      transfer_successes: Number(previous.transfer_successes ?? 0) + (args.transferred ? 1 : 0),
+      transfer_successes: Number(previous.transfer_successes ?? 0) + (transferred ? 1 : 0),
     }
 
     model.schema_version = ENGINE_VERSION
@@ -610,6 +608,7 @@ export const get_due_reviews = tool({
     at_iso: tool.schema.string().optional(),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureEngine(context.directory)
     const model = await readJson<{items: Record<string, JsonObject>}>(
       basePath(context.directory, MODEL_FILE),
@@ -628,7 +627,7 @@ export const get_due_reviews = tool({
         const weakB = 10 - Number(b.stability_days ?? 0)
         return (overdueB + weakB * 86_400_000) - (overdueA + weakA * 86_400_000)
       })
-      .slice(0, args.limit)
+      .slice(0, args.limit ?? 7)
     return JSON.stringify({ ok: true, due })
   },
 })
@@ -640,6 +639,7 @@ export const save_curriculum = tool({
     curriculum_json: tool.schema.string().describe("Complete curriculum JSON object"),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureEngine(context.directory)
     let curriculum: JsonObject
     try {
@@ -665,6 +665,7 @@ export const record_metric = tool({
     payload_json: tool.schema.string().describe("JSON object"),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureEngine(context.directory)
     let payload: JsonObject
     try {
@@ -686,6 +687,7 @@ export const efficiency_dashboard = tool({
     recent_limit: tool.schema.number().int().min(10).max(2000).default(500),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureEngine(context.directory)
     const raw = await readFile(basePath(context.directory, METRICS_FILE), "utf8")
     const events: JsonObject[] = []
@@ -697,7 +699,7 @@ export const efficiency_dashboard = tool({
         // Ignore invalid lines here; validate reports them.
       }
     }
-    const recent = events.slice(-args.recent_limit)
+    const recent = events.slice(-(args.recent_limit ?? 500))
     let minutes = 0
     let durableItems = 0
     let transferAttempts = 0
@@ -752,6 +754,7 @@ export const validate = tool({
     repair: tool.schema.boolean().default(false),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     await ensureEngine(context.directory)
     const issues: string[] = []
     const repairs: string[] = []
@@ -764,7 +767,7 @@ export const validate = tool({
         const value = JSON.parse(await readFile(basePath(context.directory, name), "utf8"))
         if (Number(value.schema_version ?? 0) !== ENGINE_VERSION) {
           issues.push(`${name}: schema_version inválida`)
-          if (args.repair) {
+          if (args.repair ?? false) {
             value.schema_version = ENGINE_VERSION
             await atomicJson(basePath(context.directory, name), value)
             repairs.push(`${name}: versão atualizada`)
@@ -772,7 +775,7 @@ export const validate = tool({
         }
       } catch (error) {
         issues.push(`${name}: JSON inválido: ${String(error)}`)
-        if (args.repair) {
+        if (args.repair ?? false) {
           await atomicJson(basePath(context.directory, name), fallback)
           repairs.push(`${name}: recriado`)
         }

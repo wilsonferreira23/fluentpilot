@@ -2,6 +2,7 @@ import { tool } from "@opencode-ai/plugin"
 import { access, mkdir } from "node:fs/promises"
 import path from "node:path"
 import { spawn } from "node:child_process"
+import { projectDirectory } from "./fluentpilot_runtime.ts"
 
 type Clip = {
   id: string
@@ -37,6 +38,7 @@ export const probe = tool({
     media_path: tool.schema.string().min(1),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     const media = path.isAbsolute(args.media_path)
       ? args.media_path
       : path.resolve(context.directory, args.media_path)
@@ -68,6 +70,7 @@ export const extract = tool({
     clips_json: tool.schema.string().describe("JSON array: [{id,start_ms,end_ms}]"),
   },
   async execute(args, context) {
+    context.directory = await projectDirectory(context.directory)
     const media = path.isAbsolute(args.media_path)
       ? args.media_path
       : path.resolve(context.directory, args.media_path)
