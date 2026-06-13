@@ -1,18 +1,18 @@
 # FluentPilot
 
-Pare de decidir o que estudar. Abra o agente e faca a proxima missao.
+Pare de decidir o que estudar. Abra o agente e faça a próxima missão.
 
-**FluentPilot** e um agente para OpenCode que transforma series, dialogos e situacoes reais em missoes diarias de ingles funcional. Ele foi feito para quem quer evoluir sem perder energia escolhendo video, palavra, revisao, legenda, speaking, listening ou plano do dia.
+**FluentPilot** é um agente para OpenCode que transforma séries, diálogos e situações reais em missões diárias de inglês funcional. Ele foi feito para quem quer evoluir sem perder energia escolhendo vídeo, palavra, revisão, legenda, speaking, listening ou plano do dia.
 
 ```text
-Voce abre o agente.
-Ele decide a proxima acao de maior retorno.
-Voce executa.
+Você abre o agente.
+Ele decide a próxima ação de maior retorno.
+Você executa.
 ```
 
 ## O problema
 
-Conteudo de ingles nao falta.
+Conteúdo de inglês não falta.
 
 O que trava muita gente e isto:
 
@@ -25,48 +25,48 @@ Uso legenda ou tiro legenda?
 Como sei se estou melhorando?
 ```
 
-Essa decisao diaria mata consistencia, especialmente para quem tem TDAH ou pouca energia mental no fim do dia.
+Essa decisão diária mata consistência, especialmente para quem tem TDAH ou pouca energia mental no fim do dia.
 
-## A solucao
+## A solução
 
-Um agente que cuida do plano por voce.
+Um agente que cuida do plano por você.
 
 Todo dia ele responde:
 
 ```text
-Missao de hoje
+Missão de hoje
 Tempo: 12 minutos
 Objetivo: viagem
 
-Hoje voce vai fazer:
+Hoje você vai fazer:
 5 respostas faladas usando "Could you help me?"
 
-Por que:
-Essa expressao ajuda voce a pedir ajuda em hotel, aeroporto e restaurante sem travar.
+Por quê:
+Essa expressão ajuda você a pedir ajuda em hotel, aeroporto e restaurante sem travar.
 
 1. Ouvir
 2. Repetir
 3. Usar em voz alta
 
-Primeira acao:
+Primeira ação:
 Fale: "Could you help me find my hotel?"
 ```
 
-Curto. Claro. Sem voce decidir o plano.
+Curto. Claro. Sem você decidir o plano.
 
 ## O diferencial
 
 A maioria dos agentes de estudo responde perguntas.
 
-Este agente **dirige a proxima acao**.
+Este agente **dirige a próxima ação**.
 
-Ele nao quer que voce vire especialista em metodo. Ele quer que voce faca a tarefa certa hoje:
+Ele não quer que você vire especialista em método. Ele quer que você faça a tarefa certa hoje:
 
-- uma expressao de alto retorno;
-- uma revisao que vai aparecer de novo;
+- uma expressão de alto retorno;
+- uma revisão que vai aparecer de novo;
 - uma resposta falada;
 - um trecho ouvido sem legenda;
-- uma conversa curta sem multipla escolha;
+- uma conversa curta sem múltipla escolha;
 - uma tarefa transferida para vida real.
 
 ## O que ele treina
@@ -81,11 +81,11 @@ ouvir
 usar
 ```
 
-Sem acumular centenas de frases passivas que voce reconhece mas nao consegue falar.
+Sem acumular centenas de frases passivas que você reconhece mas não consegue falar.
 
 ### Listening sem legenda
 
-Quando existe audio, o ouvido vem antes do texto:
+Quando existe áudio, o ouvido vem antes do texto:
 
 ```text
 ouvir sem legenda
@@ -95,16 +95,16 @@ fazer shadowing curto
 ver o texto depois
 ```
 
-### Conversacao imprevisivel
+### Conversação imprevisível
 
-Nada de depender so de multipla escolha.
+Nada de depender só de múltipla escolha.
 
-O agente cria pequenas situacoes com surpresa:
+O agente cria pequenas situações com surpresa:
 
 ```text
-O hotel nao achou sua reserva.
+O hotel não achou sua reserva.
 Responda usando "I need to..."
-Agora peca clarificacao.
+Agora peça clarificação.
 Agora encerre educadamente.
 ```
 
@@ -112,10 +112,10 @@ Agora encerre educadamente.
 
 Sumiu por 10 dias?
 
-O agente nao joga um backlog gigante na sua cara.
+O agente não joga um backlog gigante na sua cara.
 
 ```text
-Voce nao perdeu nada.
+Você não perdeu nada.
 Vamos recuperar em 5 minutos.
 ```
 
@@ -128,40 +128,40 @@ Fale 30 segundos.
 Acabou.
 ```
 
-Melhor uma missao pequena feita do que uma aula perfeita ignorada.
+Melhor uma missão pequena feita do que uma aula perfeita ignorada.
 
-## Por que series entram no metodo?
+## Por que séries entram no método?
 
-Nao e para aprender ingles "para assistir serie".
+Não é para aprender inglês "para assistir série".
 
-Series e dialogos funcionam como um laboratorio recorrente:
+Séries e diálogos funcionam como um laboratório recorrente:
 
-- personagens repetem vozes e situacoes;
+- personagens repetem vozes e situações;
 - chunks reaparecem;
-- vocabulario volta em contexto;
-- o aluno encontra a mesma expressao naturalmente;
-- proximos episodios ficam mais faceis.
+- vocabulário volta em contexto;
+- o aluno encontra a mesma expressão naturalmente;
+- próximos episódios ficam mais fáceis.
 
-A prova final nao e entender uma cena. A prova e usar ingles fora dela.
+A prova final não é entender uma cena. A prova é usar inglês fora dela.
 
-## Para quem e
+## Para quem é
 
-Este projeto faz sentido se voce:
+Este projeto faz sentido se você:
 
-- quer ingles funcional geral;
-- trava porque nao sabe o que estudar;
+- quer inglês funcional geral;
+- trava porque não sabe o que estudar;
 - quer uma rotina guiada por agente;
 - gosta de aprender com contexto real;
-- quer falar mais, nao so consumir conteudo;
-- quer reduzir dependencia de legenda;
-- precisa de missoes pequenas e claras.
+- quer falar mais, não só consumir conteúdo;
+- quer reduzir dependência de legenda;
+- precisa de missões pequenas e claras.
 
-Talvez nao seja para voce se:
+Talvez não seja para você se:
 
 - quer uma apostila tradicional;
-- quer estudar gramatica em ordem escolar;
-- quer so flashcards;
-- nao usa OpenCode.
+- quer estudar gramática em ordem escolar;
+- quer só flashcards;
+- não usa OpenCode.
 
 ## Comandos principais
 
@@ -174,20 +174,20 @@ energia baixa
 ver progresso
 ```
 
-Tambem existem:
+Também existem:
 
 ```text
 voltei
 modo guerra
 ```
 
-## Instalacao
+## Instalação
 
 Requisitos:
 
 - [OpenCode](https://opencode.ai/)
 - Node.js recente para rodar testes
-- `ffmpeg` opcional para audio/video local
+- `ffmpeg` opcional para áudio/vídeo local
 
 ### macOS ou Linux
 
@@ -220,17 +220,17 @@ começar
 
 O agente combina:
 
-- memoria local em JSON;
-- analise de legendas;
-- selecao de chunks recorrentes;
-- revisao acionada por episodios futuros;
-- speaking obrigatorio;
+- memória local em JSON;
+- análise de legendas;
+- seleção de chunks recorrentes;
+- revisão acionada por episódios futuros;
+- speaking obrigatório;
 - listening sem legenda;
-- transferencia para vida real;
-- score funcional nao literal;
+- transferência para vida real;
+- score funcional não literal;
 - modos para baixa energia e retorno.
 
-Arquitetura e notas tecnicas ficam em [`docs/`](docs/).
+Arquitetura e notas técnicas ficam em [`docs/`](docs/).
 
 ## Estrutura
 
@@ -261,33 +261,33 @@ node --check project-template/.opencode/tools/snowball_engine.ts
 
 ## Aviso honesto
 
-Este projeto nao promete fluencia milagrosa.
+Este projeto não promete fluência milagrosa.
 
 Ele promete algo mais concreto:
 
 ```text
-menos decisao
-mais execucao
+menos decisão
+mais execução
 mais fala
 mais escuta real
 mais continuidade
 ```
 
-Se isso fizer voce estudar com mais constancia, o metodo ja venceu a parte mais dificil.
+Se isso fizer você estudar com mais constância, o método já venceu a parte mais difícil.
 
 ## Contribuindo
 
-Ideias, issues e melhorias sao bem-vindas.
+Ideias, issues e melhorias são bem-vindas.
 
-Boas contribuicoes:
+Boas contribuições:
 
 - melhorar UX do agente;
 - criar novos drills de speaking;
 - melhorar roteamento de tools;
 - adicionar testes de consistencia;
-- melhorar instalacao;
+- melhorar instalação;
 - testar com modelos diferentes.
 
-## Licenca
+## Licença
 
 MIT. Use, adapte, teste e melhore.
