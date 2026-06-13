@@ -144,6 +144,60 @@ Séries e diálogos funcionam como um laboratório recorrente:
 
 A prova final não é entender uma cena. A prova é usar inglês fora dela.
 
+## Tecnologia
+
+FluentPilot é um agente para **OpenCode**, com lógica local e estado em arquivos. Ele não depende de uma plataforma fechada nem de banco de dados externo.
+
+Por dentro, o projeto usa:
+
+- **OpenCode agents**: o comportamento principal fica em `global-agent/fluentpilot.md`.
+- **TypeScript tools**: funções determinísticas em `.opencode/tools/`.
+- **Node.js test runner**: testes com `node --test`, sem framework pesado.
+- **JSON local**: progresso, missões, revisão e métricas ficam em `.ingles-em-contexto/`.
+- **ffmpeg opcional**: extração de pequenos trechos de áudio quando o usuário fornece mídia local.
+- **Arquitetura separada**: prompt do agente, regras de runtime, docs e tools ficam em arquivos diferentes.
+
+Principais módulos:
+
+```text
+study_memory.ts      memória pedagógica
+learning_engine.ts   cobertura, revisão e sessões
+snowball_core.ts     funções puras testáveis
+snowball_engine.ts   tools OpenCode + persistência
+media_clips.ts       áudio local opcional
+```
+
+Isso permite testar a lógica do método sem depender da resposta criativa de uma LLM.
+
+## Base do método
+
+FluentPilot é **research-informed**, não uma promessa mágica de fluência.
+
+Ele combina ideias bem documentadas em aquisição de segunda língua:
+
+- **Cobertura lexical em vídeo**: compreender conteúdo audiovisual melhora conforme aumenta a proporção de palavras conhecidas. Isso inspira o uso de cobertura como gate para decidir quando um episódio deve ser profundo, extensivo ou autônomo.  
+  Fonte: [Lexical coverage in L1 and L2 viewing comprehension](https://www.cambridge.org/core/journals/studies-in-second-language-acquisition/article/lexical-coverage-in-l1-and-l2-viewing-comprehension/DFCA6605076705D5762C98F286D16B27).
+
+- **Aprendizagem incidental com TV**: assistir conteúdo em L2 pode gerar aprendizagem incidental de vocabulário, influenciada por frequência, conhecimento prévio e cognatos. Isso inspira o uso de séries como laboratório recorrente, não como fim do método.  
+  Fonte: [Incidental vocabulary acquisition through viewing L2 television](https://www.cambridge.org/core/journals/studies-in-second-language-acquisition/article/incidental-vocabulary-acquisition-through-viewing-l2-television-and-factors-that-affect-learning/0E45A630F37C48A5BDB6CC3F725ADDC9).
+
+- **Sequências formulaicas e chunks**: aprendizes se beneficiam de repertórios de expressões multiword, especialmente padrões reutilizáveis. Isso inspira a abordagem chunk-first.  
+  Fonte: [Experimental and intervention studies on formulaic sequences in a second language](https://www.cambridge.org/core/journals/annual-review-of-applied-linguistics/article/experimental-and-intervention-studies-on-formulaic-sequences-in-a-second-language/A2ACDF54604CFAC4443240748360C403).
+
+- **Prática distribuída e fluência**: repetição ajuda, mas o formato e a distribuição da prática importam para transferência e fluência. Isso inspira missões curtas, revisões futuras e uso em contextos diferentes.  
+  Fonte: [The effects of distributed practice on second language fluency development](https://www.cambridge.org/core/journals/studies-in-second-language-acquisition/article/effects-of-distributed-practice-on-second-language-fluency-development/4F6787916C198376CAD222934D3B37E4).
+
+Tradução prática:
+
+```text
+menos lista de palavras
+mais chunks úteis
+mais encontros naturais
+mais fala
+mais escuta sem legenda
+mais transferência para vida real
+```
+
 ## Para quem é
 
 Este projeto faz sentido se você:
