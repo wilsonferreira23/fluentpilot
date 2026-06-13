@@ -1,70 +1,169 @@
-# Ingles em Contexto V1
+# Ingles em Contexto
 
-Um agente open source para aprender ingles com menos decisao, mais fala e mais escuta real.
+Pare de decidir o que estudar. Abra o agente e faca a proxima missao.
 
-Ele usa series, dialogos e situacoes reais como contexto recorrente, mas o objetivo nao e "aprender ingles para assistir serie". O objetivo e **fluencia funcional**: viajar, conversar, entender audio, responder sem travar e usar ingles fora da tela.
-
-## A ideia
-
-A maioria dos metodos joga decisoes demais no aluno:
+**Ingles em Contexto** e um agente para OpenCode que transforma series, dialogos e situacoes reais em missoes diarias de ingles funcional. Ele foi feito para quem quer evoluir sem perder energia escolhendo video, palavra, revisao, legenda, speaking, listening ou plano do dia.
 
 ```text
-O que estudar hoje?
-Qual video assistir?
-Quais palavras revisar?
-Faço listening ou speaking?
-Uso legenda ou nao?
+Voce abre o agente.
+Ele decide a proxima acao de maior retorno.
+Voce executa.
 ```
 
-Este agente faz o contrario:
+## O problema
+
+Conteudo de ingles nao falta.
+
+O que trava muita gente e isto:
 
 ```text
-Todo dia o aluno abre o agente
-e recebe exatamente a proxima acao de maior retorno,
-sem precisar decidir nada.
+O que eu estudo hoje?
+Qual video eu uso?
+Reviso ou aprendo coisa nova?
+Treino listening ou speaking?
+Uso legenda ou tiro legenda?
+Como sei se estou melhorando?
 ```
 
-Formato diario:
+Essa decisao diaria mata consistencia, especialmente para quem tem TDAH ou pouca energia mental no fim do dia.
+
+## A solucao
+
+Um agente que cuida do plano por voce.
+
+Todo dia ele responde:
 
 ```text
 Missao de hoje
-Tempo:
-Objetivo:
+Tempo: 12 minutos
+Objetivo: viagem
 
 Hoje voce vai fazer:
+5 respostas faladas usando "Could you help me?"
 
 Por que:
+Essa expressao ajuda voce a pedir ajuda em hotel, aeroporto e restaurante sem travar.
 
-1.
-2.
-3.
+1. Ouvir
+2. Repetir
+3. Usar em voz alta
 
 Primeira acao:
+Fale: "Could you help me find my hotel?"
 ```
 
-O aluno entende o motivo da tarefa sem precisar ver a engenharia interna.
+Curto. Claro. Sem voce decidir o plano.
+
+## O diferencial
+
+A maioria dos agentes de estudo responde perguntas.
+
+Este agente **dirige a proxima acao**.
+
+Ele nao quer que voce vire especialista em metodo. Ele quer que voce faca a tarefa certa hoje:
+
+- uma expressao de alto retorno;
+- uma revisao que vai aparecer de novo;
+- uma resposta falada;
+- um trecho ouvido sem legenda;
+- uma conversa curta sem multipla escolha;
+- uma tarefa transferida para vida real.
+
+## O que ele treina
+
+### Speaking desde cedo
+
+Todo chunk importante precisa sair da boca.
+
+```text
+ver
+ouvir
+usar
+```
+
+Sem acumular centenas de frases passivas que voce reconhece mas nao consegue falar.
+
+### Listening sem legenda
+
+Quando existe audio, o ouvido vem antes do texto:
+
+```text
+ouvir sem legenda
+pegar a ideia geral
+ouvir detalhes
+fazer shadowing curto
+ver o texto depois
+```
+
+### Conversacao imprevisivel
+
+Nada de depender so de multipla escolha.
+
+O agente cria pequenas situacoes com surpresa:
+
+```text
+O hotel nao achou sua reserva.
+Responda usando "I need to..."
+Agora peca clarificacao.
+Agora encerre educadamente.
+```
+
+### Retorno sem culpa
+
+Sumiu por 10 dias?
+
+O agente nao joga um backlog gigante na sua cara.
+
+```text
+Voce nao perdeu nada.
+Vamos recuperar em 5 minutos.
+```
+
+### Modo guerra
+
+Sem energia?
+
+```text
+Fale 30 segundos.
+Acabou.
+```
+
+Melhor uma missao pequena feita do que uma aula perfeita ignorada.
+
+## Por que series entram no metodo?
+
+Nao e para aprender ingles "para assistir serie".
+
+Series e dialogos funcionam como um laboratorio recorrente:
+
+- personagens repetem vozes e situacoes;
+- chunks reaparecem;
+- vocabulario volta em contexto;
+- o aluno encontra a mesma expressao naturalmente;
+- proximos episodios ficam mais faceis.
+
+A prova final nao e entender uma cena. A prova e usar ingles fora dela.
 
 ## Para quem e
 
-- Quem quer ingles funcional geral.
-- Quem trava porque nao sabe o que estudar no dia.
-- Quem tem TDAH ou sofre com fadiga de decisao.
-- Quem quer usar series como contexto, nao como objetivo final.
-- Quem quer mais speaking, listening sem legenda e conversacao imprevisivel.
+Este projeto faz sentido se voce:
 
-## O que o agente faz
+- quer ingles funcional geral;
+- trava porque nao sabe o que estudar;
+- quer uma rotina guiada por agente;
+- gosta de aprender com contexto real;
+- quer falar mais, nao so consumir conteudo;
+- quer reduzir dependencia de legenda;
+- precisa de missoes pequenas e claras.
 
-- Cria a missao do dia automaticamente.
-- Explica em uma frase curta por que aquela tarefa importa.
-- Escolhe chunks de alto retorno para os proximos episodios.
-- Exige producao oral cedo.
-- Comeca sessoes com audio sem legenda quando ha audio disponivel.
-- Cria conversas sem multipla escolha.
-- Faz modo retorno quando o aluno some.
-- Faz modo guerra de 3 minutos para dias ruins.
-- Mostra progresso funcional sem fingir que um score e fluencia real.
+Talvez nao seja para voce se:
 
-## Comandos humanos
+- quer uma apostila tradicional;
+- quer estudar gramatica em ordem escolar;
+- quer so flashcards;
+- nao usa OpenCode.
+
+## Comandos principais
 
 O aluno precisa lembrar de poucos comandos:
 
@@ -82,102 +181,13 @@ voltei
 modo guerra
 ```
 
-## Diferenciais
-
-### 1. Menos fadiga de decisao
-
-O agente decide o que vem agora. O aluno executa.
-
-### 2. Producao primeiro
-
-Todo chunk novo precisa ser usado na mesma sessao.
-
-```text
-ver
-ouvir
-usar
-```
-
-### 3. Speaking agressivo
-
-Um chunk importante pode exigir cinco respostas faladas antes de o aluno seguir.
-
-### 4. Listening sem legenda
-
-Quando existe audio, o fluxo comeca pelo ouvido:
-
-```text
-ouvir sem legenda
-entender ideia geral
-ouvir detalhes
-shadowing curto
-ver texto depois
-```
-
-### 5. Conversacao imprevisivel
-
-O agente cria situacoes com surpresa, sem resposta pronta e sem multipla escolha.
-
-### 6. Modo retorno
-
-Se o aluno some, o agente nao mostra backlog gigante:
-
-```text
-Voce nao perdeu nada.
-Vamos recuperar em 5 minutos.
-```
-
-## Como funciona por dentro
-
-O projeto combina:
-
-- memoria deterministica;
-- analise de legendas;
-- chunks recorrentes;
-- revisao acionada por episodios futuros;
-- pratica oral;
-- transferencia para vida real;
-- metricas de autonomia;
-- estado local em JSON.
-
-A arquitetura completa fica em [`docs/`](docs/).
-
-## Estrutura
-
-```text
-ingles-em-contexto-opencode-v1-snowball/
-├── README.md
-├── install.sh
-├── install.ps1
-├── global-agent/
-│   └── ingles-em-contexto.md
-├── project-template/
-│   ├── AGENTS.md
-│   ├── MEMORY_RULES.md
-│   ├── opencode.json
-│   ├── .opencode/tools/
-│   └── .ingles-em-contexto/
-├── docs/
-│   ├── METHOD.md
-│   ├── OPENCODE_AGENT_GUIDE.md
-│   ├── LLM_BEHAVIOR_GUIDE.md
-│   ├── FILE_STRUCTURE.md
-│   ├── UX_RULES.md
-│   ├── ARCHITECTURE.md
-│   ├── ACCELERATION_MODEL.md
-│   ├── RESEARCH_BASIS.md
-│   ├── SNOWBALL_ENGINE.md
-│   └── INSTALLATION_NOTES.md
-└── tests/
-```
-
 ## Instalacao
 
 Requisitos:
 
 - [OpenCode](https://opencode.ai/)
 - Node.js recente para rodar testes
-- `ffmpeg` opcional para trabalhar com audio/video local
+- `ffmpeg` opcional para audio/video local
 
 ### macOS ou Linux
 
@@ -206,6 +216,41 @@ Depois, no OpenCode, selecione o agente `ingles-em-contexto` e diga:
 começar
 ```
 
+## Como funciona por dentro
+
+O agente combina:
+
+- memoria local em JSON;
+- analise de legendas;
+- selecao de chunks recorrentes;
+- revisao acionada por episodios futuros;
+- speaking obrigatorio;
+- listening sem legenda;
+- transferencia para vida real;
+- score funcional nao literal;
+- modos para baixa energia e retorno.
+
+Arquitetura e notas tecnicas ficam em [`docs/`](docs/).
+
+## Estrutura
+
+```text
+ingles-em-contexto/
+├── README.md
+├── install.sh
+├── install.ps1
+├── global-agent/
+│   └── ingles-em-contexto.md
+├── project-template/
+│   ├── AGENTS.md
+│   ├── MEMORY_RULES.md
+│   ├── opencode.json
+│   ├── .opencode/tools/
+│   └── .ingles-em-contexto/
+├── docs/
+└── tests/
+```
+
 ## Testes
 
 ```bash
@@ -216,16 +261,32 @@ node --check project-template/.opencode/tools/snowball_engine.ts
 
 ## Aviso honesto
 
-Este projeto tenta reduzir desperdicio e aumentar aprendizagem por hora. Ele nao promete fluencia milagrosa nem garante "metade do tempo" sem dados reais do aluno.
+Este projeto nao promete fluencia milagrosa.
 
-A promessa do produto e mais concreta:
+Ele promete algo mais concreto:
 
 ```text
-abrir o agente
-receber a proxima acao certa
-entender por que ela importa
-executar sem decidir o plano do dia
+menos decisao
+mais execucao
+mais fala
+mais escuta real
+mais continuidade
 ```
+
+Se isso fizer voce estudar com mais constancia, o metodo ja venceu a parte mais dificil.
+
+## Contribuindo
+
+Ideias, issues e melhorias sao bem-vindas.
+
+Boas contribuicoes:
+
+- melhorar UX do agente;
+- criar novos drills de speaking;
+- melhorar roteamento de tools;
+- adicionar testes de consistencia;
+- melhorar instalacao;
+- testar com modelos diferentes.
 
 ## Licenca
 
