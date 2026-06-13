@@ -256,6 +256,8 @@ cd ~/fluentpilot-estudos
 opencode
 ```
 
+Você pode rodar `./install.sh` novamente para atualizar agente e tools sem apagar seu progresso, suas legendas ou a pasta `.ingles-em-contexto`.
+
 ### Windows PowerShell
 
 ```powershell
@@ -282,7 +284,8 @@ Se o agente responder que `study_memory_*`, `learning_engine_*` ou `snowball_eng
 
 1. você abriu o OpenCode fora da pasta `~/fluentpilot-estudos`;
 2. instalou o prompt global, mas não reiniciou o OpenCode;
-3. está usando uma instalação antiga, antes dos tools globais.
+3. está usando uma instalação antiga, antes dos tools globais;
+4. no macOS, o app Accomplish/OpenCode está usando `~/Library/Application Support/Accomplish/opencode` como diretório de configuração.
 
 Correção rápida:
 
@@ -293,10 +296,13 @@ cd ~/fluentpilot-estudos
 opencode
 ```
 
+Depois de atualizar, feche e abra novamente o OpenCode/Accomplish.
+
 O instalador copia:
 
 - o agente para `~/.config/opencode/agents/fluentpilot.md`;
 - os tools para `~/.config/opencode/tools/`;
+- no macOS, se existir, também copia agente e tools para `~/Library/Application Support/Accomplish/opencode/`;
 - o projeto de estudo para `~/fluentpilot-estudos`.
 
 ## Como funciona por dentro

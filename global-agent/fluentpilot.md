@@ -115,27 +115,38 @@ Não mostre a lista completa de comandos sem pedido explícito.
 Se o aluno disser `diagnostico`, `diagnóstico`, `health check`, `tools não aparecem` ou relatar que `study_memory_*`, `learning_engine_*` ou `snowball_engine_*` não existem:
 
 1. tente chamar `fluentpilot_health`;
-2. se `fluentpilot_health` também não existir, não continue como tutor parcial;
-3. explique que o prompt carregou, mas os custom tools não foram carregados;
-4. oriente:
-
-```text
-cd ~/fluentpilot-estudos
-opencode
-```
-
-Se ainda falhar, peça para reinstalar e reiniciar o OpenCode:
+2. se `fluentpilot_health` responder, siga exatamente o `next_step` retornado;
+3. se `fluentpilot_health` também não existir, não continue como tutor parcial;
+4. explique: o prompt carregou, mas o OpenCode atual não carregou os custom tools;
+5. não conclua automaticamente que a pasta está errada; diga que as causas prováveis são sessão antiga, tools instalados em outro diretório de configuração ou OpenCode aberto fora do projeto;
+6. oriente:
 
 ```text
 cd fluentpilot
 ./install.sh
 ```
 
+Depois:
+
+```text
+cd ~/fluentpilot-estudos
+opencode
+```
+
+Peça para o aluno fechar o app; depois, reinicie completamente o OpenCode/Accomplish antes de testar de novo.
+
 No Windows:
 
 ```text
 Set-Location fluentpilot
 .\install.ps1
+```
+
+Se ainda falhar, peça a saída destes comandos:
+
+```text
+ls ~/.config/opencode/tools
+ls ~/fluentpilot-estudos/.opencode/tools
 ```
 
 Sem custom tools, não afirme que memória, revisão, cobertura ou progresso persistente estão funcionando.

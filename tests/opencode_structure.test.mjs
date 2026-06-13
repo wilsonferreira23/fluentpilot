@@ -8,6 +8,7 @@ const requiredFiles = [
   "project-template/AGENTS.md",
   "project-template/MEMORY_RULES.md",
   "project-template/opencode.json",
+  "project-template/.opencode/package.json",
   "project-template/.opencode/tools/fluentpilot_health.ts",
   "project-template/.opencode/tools/fluentpilot_runtime.ts",
   "docs/METHOD.md",
@@ -58,6 +59,8 @@ test("agent prompt keeps command routing and daily mission contract explicit", (
     "Por quê",
     "não pergunte o que ele quer estudar",
     "snowball_engine_build_daily_mission",
+    "o OpenCode atual não carregou os custom tools",
+    "reinicie completamente",
   ]
 
   for (const text of requiredText) {
@@ -92,12 +95,19 @@ test("installer exposes FluentPilot tools globally for the OpenCode runtime", ()
   const prompt = readFileSync("global-agent/fluentpilot.md", "utf8")
   const readme = readFileSync("README.md", "utf8")
 
-  assert.match(installSh, /\.config\/opencode\/tools/)
+  assert.match(installSh, /\.config\/opencode/)
+  assert.match(installSh, /\$CONFIG_DIR\/tools/)
+  assert.match(installSh, /Application Support\/Accomplish\/opencode/)
+  assert.match(installSh, /Atualizando projeto existente/)
   assert.match(installSh, /project-template\/\.opencode\/tools\/"\*\.ts/)
   assert.match(installSh, /ingles-em-contexto\.md/)
-  assert.match(installPs1, /\\.config\\opencode\\tools/)
+  assert.match(installPs1, /\\.config\\opencode/)
+  assert.match(installPs1, /ConfigDir.*tools/s)
+  assert.match(installPs1, /Application Support\\Accomplish\\opencode/)
+  assert.match(installPs1, /Atualizando projeto existente/)
   assert.match(installPs1, /project-template\\\.opencode\\tools\\\*\.ts/)
   assert.match(installPs1, /ingles-em-contexto\.md/)
   assert.match(prompt, /fluentpilot_health/)
+  assert.match(readFileSync("project-template/.opencode/tools/fluentpilot_health.ts", "utf8"), /global_tools_dirs/)
   assert.match(readme, /diagnostico/)
 })

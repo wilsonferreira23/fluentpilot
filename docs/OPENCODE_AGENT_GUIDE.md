@@ -42,7 +42,14 @@ Depois disso, deve continuar da proxima acao validada pelo estado em disco.
 
 ## Diagnostico
 
-Se o agente disser que os tools nao existem, provavelmente o OpenCode foi aberto fora do projeto instalado ou precisa ser reiniciado apos a instalacao.
+Se o agente disser que os tools nao existem, o processo atual do OpenCode nao carregou custom tools.
+
+Causas comuns:
+
+- OpenCode foi aberto fora do projeto instalado;
+- OpenCode/Accomplish nao foi reiniciado apos instalar;
+- tools foram copiados para `~/.config/opencode`, mas o app macOS esta usando `~/Library/Application Support/Accomplish/opencode`;
+- projeto existente nao recebeu a versao nova dos tools.
 
 Teste dentro do OpenCode:
 
@@ -60,6 +67,8 @@ cd fluentpilot
 cd ~/fluentpilot-estudos
 opencode
 ```
+
+O instalador pode ser rodado novamente. Ele atualiza prompt, tools e arquivos de runtime sem apagar `.ingles-em-contexto` nem `legendas`.
 
 ## Contrato diario
 
