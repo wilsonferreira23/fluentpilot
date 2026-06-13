@@ -160,6 +160,7 @@ Por dentro, o projeto usa:
 Principais módulos:
 
 ```text
+fluentpilot_health.ts diagnóstico de instalação/tools
 study_memory.ts      memória pedagógica
 learning_engine.ts   cobertura, revisão e sessões
 snowball_core.ts     funções puras testáveis
@@ -270,6 +271,33 @@ Depois, no OpenCode, selecione o agente `fluentpilot` e diga:
 começar
 ```
 
+Para confirmar que os tools carregaram, diga:
+
+```text
+diagnostico
+```
+
+Se o agente responder que `study_memory_*`, `learning_engine_*` ou `snowball_engine_*` não existem, quase sempre é uma destas causas:
+
+1. você abriu o OpenCode fora da pasta `~/fluentpilot-estudos`;
+2. instalou o prompt global, mas não reiniciou o OpenCode;
+3. está usando uma instalação antiga, antes dos tools globais.
+
+Correção rápida:
+
+```bash
+cd fluentpilot
+./install.sh
+cd ~/fluentpilot-estudos
+opencode
+```
+
+O instalador copia:
+
+- o agente para `~/.config/opencode/agents/fluentpilot.md`;
+- os tools para `~/.config/opencode/tools/`;
+- o projeto de estudo para `~/fluentpilot-estudos`.
+
 ## Como funciona por dentro
 
 O agente combina:
@@ -311,6 +339,7 @@ fluentpilot/
 node --test tests/*.test.mjs
 node --check project-template/.opencode/tools/snowball_core.ts
 node --check project-template/.opencode/tools/snowball_engine.ts
+node --check project-template/.opencode/tools/fluentpilot_health.ts
 ```
 
 ## Aviso honesto

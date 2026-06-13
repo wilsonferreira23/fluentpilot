@@ -8,6 +8,7 @@ Este projeto separa arquivos de runtime, tools e documentacao longa para funcion
 - `project-template/AGENTS.md`: regras curtas lidas no projeto instalado.
 - `project-template/MEMORY_RULES.md`: instrucoes de runtime carregadas por `opencode.json`.
 - `project-template/opencode.json`: aponta para `MEMORY_RULES.md`.
+- `~/.config/opencode/tools/`: copia global dos tools feita pelo instalador.
 
 ## Tools
 
@@ -19,6 +20,7 @@ project-template/.opencode/tools/
 
 Responsabilidades:
 
+- `fluentpilot_health.ts`: diagnostico de instalacao e visibilidade dos tools.
 - `study_memory.ts`: estado pedagogico base.
 - `learning_engine.ts`: curriculo, revisao, cobertura e sessoes.
 - `snowball_core.ts`: funcoes puras e testaveis.
@@ -37,6 +39,27 @@ snowball_engine_bootstrap
 ```
 
 Depois disso, deve continuar da proxima acao validada pelo estado em disco.
+
+## Diagnostico
+
+Se o agente disser que os tools nao existem, provavelmente o OpenCode foi aberto fora do projeto instalado ou precisa ser reiniciado apos a instalacao.
+
+Teste dentro do OpenCode:
+
+```text
+diagnostico
+```
+
+O agente deve chamar `fluentpilot_health`.
+
+Se ate `fluentpilot_health` nao existir, reinstale:
+
+```bash
+cd fluentpilot
+./install.sh
+cd ~/fluentpilot-estudos
+opencode
+```
 
 ## Contrato diario
 

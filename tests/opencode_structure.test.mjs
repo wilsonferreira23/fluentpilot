@@ -8,6 +8,7 @@ const requiredFiles = [
   "project-template/AGENTS.md",
   "project-template/MEMORY_RULES.md",
   "project-template/opencode.json",
+  "project-template/.opencode/tools/fluentpilot_health.ts",
   "docs/METHOD.md",
   "docs/OPENCODE_AGENT_GUIDE.md",
   "docs/LLM_BEHAVIOR_GUIDE.md",
@@ -82,4 +83,20 @@ test("public brand is FluentPilot while local state directory remains stable", (
   assert.match(install, /fluentpilot\.md/)
   assert.match(prompt, /Você é o \*\*FluentPilot\*\*/)
   assert.match(prompt, /\.ingles-em-contexto/)
+})
+
+test("installer exposes FluentPilot tools globally for the OpenCode runtime", () => {
+  const installSh = readFileSync("install.sh", "utf8")
+  const installPs1 = readFileSync("install.ps1", "utf8")
+  const prompt = readFileSync("global-agent/fluentpilot.md", "utf8")
+  const readme = readFileSync("README.md", "utf8")
+
+  assert.match(installSh, /\.config\/opencode\/tools/)
+  assert.match(installSh, /project-template\/\.opencode\/tools\/"\*\.ts/)
+  assert.match(installSh, /ingles-em-contexto\.md/)
+  assert.match(installPs1, /\\.config\\opencode\\tools/)
+  assert.match(installPs1, /project-template\\\.opencode\\tools\\\*\.ts/)
+  assert.match(installPs1, /ingles-em-contexto\.md/)
+  assert.match(prompt, /fluentpilot_health/)
+  assert.match(readme, /diagnostico/)
 })

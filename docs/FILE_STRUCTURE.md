@@ -34,3 +34,14 @@ fluentpilot/
 - `project-template/`: arquivos copiados para o projeto de estudo.
 - `docs/`: explicacao do metodo, arquitetura e manutencao.
 - `tests/`: testes de core e consistencia OpenCode.
+
+## Instalacao OpenCode
+
+O instalador tambem copia:
+
+```text
+global-agent/fluentpilot.md -> ~/.config/opencode/agents/fluentpilot.md
+project-template/.opencode/tools/*.ts -> ~/.config/opencode/tools/
+```
+
+Isso permite que o agente global enxergue os custom tools mesmo quando o OpenCode carrega agentes globais antes dos tools locais do projeto.
