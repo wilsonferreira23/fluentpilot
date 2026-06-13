@@ -2,7 +2,7 @@
 
 Pare de decidir o que estudar. Abra o agente e faça a próxima missão.
 
-**FluentPilot** é um agente para OpenCode que transforma séries, diálogos e situações reais em missões diárias de inglês funcional. Ele foi feito para quem quer evoluir sem perder energia escolhendo vídeo, palavra, revisão, legenda, speaking, listening ou plano do dia.
+**FluentPilot** é um agente para OpenCode e Hermes que transforma séries, diálogos e situações reais em missões diárias de inglês funcional. Ele foi feito para quem quer evoluir sem perder energia escolhendo vídeo, palavra, revisão, legenda, speaking, listening ou plano do dia.
 
 ```text
 Você abre o agente.
@@ -148,12 +148,14 @@ A prova final não é entender uma cena. A prova é usar inglês fora dela.
 
 ## Tecnologia
 
-FluentPilot é um agente para **OpenCode**, com lógica local e estado em arquivos. Ele não depende de uma plataforma fechada nem de banco de dados externo.
+FluentPilot é um agente para **OpenCode** e **Hermes**, com lógica local e estado em arquivos. Ele não depende de uma plataforma fechada nem de banco de dados externo.
 
 Por dentro, o projeto usa:
 
 - **OpenCode agents**: o comportamento principal fica em `global-agent/fluentpilot.md`.
 - **TypeScript tools**: funções determinísticas em `.opencode/tools/`.
+- **Hermes profile**: distribuição em `hermes/` com `SOUL.md`, `AGENTS.md`, skill e plugin Python.
+- **Hermes plugin**: ferramentas determinísticas em `hermes/plugins/fluentpilot/`.
 - **Node.js test runner**: testes com `node --test`, sem framework pesado.
 - **JSON local**: progresso, missões, revisão e métricas ficam em `.ingles-em-contexto/`.
 - **ffmpeg opcional**: extração de pequenos trechos de áudio quando o usuário fornece mídia local.
@@ -169,6 +171,7 @@ learning_engine.ts   cobertura, revisão e sessões
 snowball_core.ts     funções puras testáveis
 snowball_engine.ts   tools OpenCode + persistência
 media_clips.ts       áudio local opcional
+hermes/plugins/      plugin Python para Hermes
 ```
 
 Isso permite testar a lógica do método sem depender da resposta criativa de uma LLM.
@@ -219,7 +222,7 @@ Talvez não seja para você se:
 - quer uma apostila tradicional;
 - quer estudar gramática em ordem escolar;
 - quer só flashcards;
-- não usa OpenCode.
+- não usa OpenCode nem Hermes.
 
 ## Comandos principais
 
@@ -241,13 +244,13 @@ modo guerra
 
 ## Instalação
 
-Requisitos:
+Requisitos para OpenCode:
 
 - [OpenCode](https://opencode.ai/)
 - Node.js recente para rodar testes
 - `ffmpeg` opcional para áudio/vídeo local
 
-### macOS ou Linux
+### OpenCode no macOS ou Linux
 
 ```bash
 git clone https://github.com/wilsonferreira23/fluentpilot.git
@@ -260,7 +263,7 @@ opencode
 
 Você pode rodar `./install.sh` novamente para atualizar agente e tools sem apagar seu progresso, suas legendas ou a pasta `.ingles-em-contexto`.
 
-### Windows PowerShell
+### OpenCode no Windows PowerShell
 
 ```powershell
 git clone https://github.com/wilsonferreira23/fluentpilot.git
@@ -306,6 +309,51 @@ O instalador copia:
 - os tools para `~/.config/opencode/tools/`;
 - no macOS, se existir, também copia agente e tools para `~/Library/Application Support/Accomplish/opencode/`;
 - o projeto de estudo para `~/fluentpilot-estudos`.
+
+### Hermes
+
+Requisitos:
+
+- [Hermes](https://hermes-agent.nousresearch.com/docs/getting-started/installation/)
+- Python local disponível para o plugin Hermes
+- Node.js recente para rodar os testes do projeto
+- `ffmpeg` opcional para áudio/vídeo local
+
+Instalação:
+
+```bash
+git clone https://github.com/wilsonferreira23/fluentpilot.git
+cd fluentpilot
+chmod +x install-hermes.sh
+./install-hermes.sh
+cd ~/fluentpilot-estudos
+fluentpilot chat
+```
+
+Se o alias `fluentpilot` ainda não existir:
+
+```bash
+hermes profile create fluentpilot
+fluentpilot plugins enable fluentpilot
+hermes profile use fluentpilot
+hermes chat
+```
+
+Depois diga:
+
+```text
+diagnostico
+```
+
+O instalador Hermes copia:
+
+- `hermes/SOUL.md` para o profile `fluentpilot`;
+- `hermes/AGENTS.md` e `hermes/config.yaml`;
+- o skill `hermes/skills/fluentpilot/SKILL.md`;
+- o plugin Python `hermes/plugins/fluentpilot/`;
+- o projeto de estudo para `~/fluentpilot-estudos`.
+
+Guia completo: [`docs/HERMES_INSTALLATION.md`](docs/HERMES_INSTALLATION.md).
 
 ## Como funciona por dentro
 

@@ -1,0 +1,26 @@
+name: fluentpilot
+version: 1.0.0
+description: FluentPilot learning tools for Hermes: local study memory, subtitle analysis, daily missions, speaking, listening, conversation drills, and progress score.
+provides_tools:
+  - fluentpilot_health
+  - study_memory_bootstrap
+  - study_memory_get_state
+  - study_memory_append_event
+  - study_memory_update_mastery
+  - learning_engine_bootstrap
+  - learning_engine_analyze_subtitles
+  - snowball_engine_bootstrap
+  - snowball_engine_analyze_season
+  - snowball_engine_build_daily_mission
+  - snowball_engine_build_production_first_drill
+  - snowball_engine_build_speaking_reps_drill
+  - snowball_engine_build_captionless_listening_drill
+  - snowball_engine_build_unpredictable_conversation_drill
+  - snowball_engine_build_real_life_transfer
+  - snowball_engine_build_war_mode
+  - snowball_engine_build_return_mode
+  - snowball_engine_functional_capability_dashboard
+  - snowball_engine_calculate_fluency_score
+  - snowball_engine_complete_daily_mission
+  - media_clips_probe
+  - media_clips_extract

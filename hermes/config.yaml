@@ -1,0 +1,13 @@
+plugins:
+  enabled:
+    - fluentpilot
+
+toolsets:
+  enabled:
+    - file
+    - terminal
+    - skills
+    - memory
+    - web
+    - fluentpilot
+

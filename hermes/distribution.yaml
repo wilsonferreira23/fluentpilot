@@ -1,0 +1,13 @@
+name: fluentpilot
+version: 1.0.0
+description: FluentPilot, um agente de fluência em inglês funcional com missões diárias, memória local e ferramentas pedagógicas.
+author: Wilson Ferreira
+homepage: https://github.com/wilsonferreira23/fluentpilot
+license: MIT
+files:
+  - SOUL.md
+  - AGENTS.md
+  - config.yaml
+  - skills/
+  - plugins/
+
