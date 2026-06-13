@@ -4,7 +4,7 @@ Este projeto separa arquivos de runtime, tools e documentacao longa para funcion
 
 ## Arquivos de runtime
 
-- `global-agent/ingles-em-contexto.md`: prompt principal do agente global.
+- `global-agent/fluentpilot.md`: prompt principal do agente global.
 - `project-template/AGENTS.md`: regras curtas lidas no projeto instalado.
 - `project-template/MEMORY_RULES.md`: instrucoes de runtime carregadas por `opencode.json`.
 - `project-template/opencode.json`: aponta para `MEMORY_RULES.md`.

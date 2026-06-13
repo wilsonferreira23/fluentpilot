@@ -1,4 +1,4 @@
-# Inglês em Contexto V1 Runtime Rules
+# FluentPilot Runtime Rules
 
 - Disk state is authoritative.
 - Bootstrap memory, learning engine and snowball engine before study responses.

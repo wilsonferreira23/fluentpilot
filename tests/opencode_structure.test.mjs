@@ -4,7 +4,7 @@ import test from "node:test"
 
 const requiredFiles = [
   "README.md",
-  "global-agent/ingles-em-contexto.md",
+  "global-agent/fluentpilot.md",
   "project-template/AGENTS.md",
   "project-template/MEMORY_RULES.md",
   "project-template/opencode.json",
@@ -46,7 +46,7 @@ test("OpenCode config points to the concise runtime rules", () => {
 })
 
 test("agent prompt keeps command routing and daily mission contract explicit", () => {
-  const prompt = readFileSync("global-agent/ingles-em-contexto.md", "utf8")
+  const prompt = readFileSync("global-agent/fluentpilot.md", "utf8")
   const requiredText = [
     "começar",
     "continuar",
@@ -69,4 +69,17 @@ test("LLM behavior guide assumes capable current models without over-compressing
   assert.match(guide, /modelos atuais/i)
   assert.match(guide, /DeepSeek|Kimi|GPT/i)
   assert.match(guide, /n[aã]o precisa reduzir o prompt ao extremo/i)
+})
+
+test("public brand is FluentPilot while local state directory remains stable", () => {
+  const readme = readFileSync("README.md", "utf8")
+  const install = readFileSync("install.sh", "utf8")
+  const prompt = readFileSync("global-agent/fluentpilot.md", "utf8")
+
+  assert.match(readme, /^# FluentPilot/m)
+  assert.match(readme, /github\.com\/wilsonferreira23\/fluentpilot/)
+  assert.match(readme, /selecione o agente `fluentpilot`/)
+  assert.match(install, /fluentpilot\.md/)
+  assert.match(prompt, /Você é o \*\*FluentPilot\*\*/)
+  assert.match(prompt, /\.ingles-em-contexto/)
 })

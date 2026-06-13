@@ -26,7 +26,7 @@ const META_FILE = "META.json"
 const BACKUPS_DIR = "backups"
 const LOCK_FILE = ".lock"
 
-const INITIAL_STATE = `# Inglês em Contexto — Estado atual
+const INITIAL_STATE = `# FluentPilot — Estado atual
 
 <!-- managed-by: study-memory-v6 -->
 <!-- revision: 0 -->
@@ -234,7 +234,7 @@ function injectStateMetadata(
     `<!-- updated-at: ${updatedAt} -->`,
   )
   if (!output.includes("<!-- managed-by: study-memory-v6 -->")) {
-    output = `# Inglês em Contexto — Estado atual
+    output = `# FluentPilot — Estado atual
 
 <!-- managed-by: study-memory-v6 -->
 <!-- revision: ${revision} -->
@@ -291,7 +291,7 @@ function safeKey(value: string): string {
 
 export const bootstrap = tool({
   description:
-    "Initialize and verify the Inglês em Contexto V6 memory files. Call before every study session.",
+    "Initialize and verify the FluentPilot memory files. Call before every study session.",
   args: {},
   async execute(_args, context) {
     const result = await ensureMemory(context.directory)

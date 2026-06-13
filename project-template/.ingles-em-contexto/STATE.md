@@ -1,6 +1,6 @@
-# Ingles em Contexto V1 — Estado atual
+# FluentPilot V1 — Estado atual
 
-<!-- managed-by: ingles-em-contexto-v1 -->
+<!-- managed-by: fluentpilot-v1 -->
 <!-- revision: 0 -->
 <!-- updated-at: null -->
 

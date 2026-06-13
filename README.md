@@ -1,8 +1,8 @@
-# Ingles em Contexto
+# FluentPilot
 
 Pare de decidir o que estudar. Abra o agente e faca a proxima missao.
 
-**Ingles em Contexto** e um agente para OpenCode que transforma series, dialogos e situacoes reais em missoes diarias de ingles funcional. Ele foi feito para quem quer evoluir sem perder energia escolhendo video, palavra, revisao, legenda, speaking, listening ou plano do dia.
+**FluentPilot** e um agente para OpenCode que transforma series, dialogos e situacoes reais em missoes diarias de ingles funcional. Ele foi feito para quem quer evoluir sem perder energia escolhendo video, palavra, revisao, legenda, speaking, listening ou plano do dia.
 
 ```text
 Voce abre o agente.
@@ -192,25 +192,25 @@ Requisitos:
 ### macOS ou Linux
 
 ```bash
-git clone https://github.com/wilsonferreira23/ingles-em-contexto.git
-cd ingles-em-contexto
+git clone https://github.com/wilsonferreira23/fluentpilot.git
+cd fluentpilot
 chmod +x install.sh
 ./install.sh
-cd ~/ingles-em-contexto-estudos
+cd ~/fluentpilot-estudos
 opencode
 ```
 
 ### Windows PowerShell
 
 ```powershell
-git clone https://github.com/wilsonferreira23/ingles-em-contexto.git
-Set-Location ingles-em-contexto
+git clone https://github.com/wilsonferreira23/fluentpilot.git
+Set-Location fluentpilot
 .\install.ps1
-Set-Location "$HOME\ingles-em-contexto-estudos"
+Set-Location "$HOME\fluentpilot-estudos"
 opencode
 ```
 
-Depois, no OpenCode, selecione o agente `ingles-em-contexto` e diga:
+Depois, no OpenCode, selecione o agente `fluentpilot` e diga:
 
 ```text
 começar
@@ -235,12 +235,12 @@ Arquitetura e notas tecnicas ficam em [`docs/`](docs/).
 ## Estrutura
 
 ```text
-ingles-em-contexto/
+fluentpilot/
 ├── README.md
 ├── install.sh
 ├── install.ps1
 ├── global-agent/
-│   └── ingles-em-contexto.md
+│   └── fluentpilot.md
 ├── project-template/
 │   ├── AGENTS.md
 │   ├── MEMORY_RULES.md

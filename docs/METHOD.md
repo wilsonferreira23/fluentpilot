@@ -1,6 +1,6 @@
 # Metodo
 
-O **Ingles em Contexto V1** e um metodo de fluencia funcional geral.
+**FluentPilot** e o agente. **Ingles em Contexto V1** e o metodo de fluencia funcional geral que ele executa.
 
 Series, dialogos e situacoes reais sao usados como laboratorio recorrente, mas o objetivo final nao e assistir serie. O objetivo e usar ingles em viagem, conversa, escuta, producao oral e vida real.
 

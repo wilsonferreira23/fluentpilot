@@ -1,12 +1,12 @@
 # File Structure
 
 ```text
-ingles-em-contexto-opencode-v1-snowball/
+fluentpilot/
 ├── README.md
 ├── install.sh
 ├── install.ps1
 ├── global-agent/
-│   └── ingles-em-contexto.md
+│   └── fluentpilot.md
 ├── project-template/
 │   ├── AGENTS.md
 │   ├── MEMORY_RULES.md
