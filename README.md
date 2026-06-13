@@ -108,6 +108,8 @@ Agora peça clarificação.
 Agora encerre educadamente.
 ```
 
+E também treina pragmática: interrupções, mal-entendidos, mudança brusca de assunto, defesa rápida de uma escolha e reação natural a humor ou ironia leve. A meta é o aluno não congelar quando a conversa real sair do roteiro.
+
 ### Retorno sem culpa
 
 Sumiu por 10 dias?

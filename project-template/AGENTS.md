@@ -49,6 +49,7 @@ Mostre uma decisão por mensagem. Esconda métricas técnicas até o aluno pedir
 - Ao receber `modo guerra`, use `snowball_engine_build_war_mode`.
 - Ao detectar retorno após ausência, use `snowball_engine_build_return_mode`.
 - Todo chunk novo deve ter produção na mesma sessão com `snowball_engine_build_production_first_drill`.
+- Conversação real precisa de caos controlado: interrupção, mal-entendido, mudança de assunto, defesa de escolha e humor/ironia leve.
 - Todo chunk novo exige cinco respostas faladas antes de avançar.
 - Toda sessão com áudio começa sem legenda.
 - Conversação imprevisível não usa múltipla escolha.

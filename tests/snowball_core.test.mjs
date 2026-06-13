@@ -395,8 +395,32 @@ test("buildUnpredictableConversationDrill creates branching turns without multip
 
   assert.equal(drill.type, "unpredictable_conversation")
   assert.equal(drill.objective, "travel")
-  assert.equal(drill.turns.length, 4)
+  assert.ok(drill.turns.length >= 6)
   assert.equal(drill.multiple_choice_allowed, false)
   assert.match(drill.turns[0].prompt, /reservation/)
   assert.match(drill.turns[1].repair_strategy, /ask for clarification/)
+})
+
+test("buildUnpredictableConversationDrill trains pragmatic chaos and spontaneous repair", () => {
+  const drill = buildUnpredictableConversationDrill({
+    objective: "work",
+    chunks: ["I think we should", "Could you clarify"],
+    surprise: "a teammate interrupts your code review explanation",
+  })
+
+  assert.deepEqual(drill.pragmatic_skills, [
+    "interruption_recovery",
+    "clarification",
+    "topic_shift",
+    "defend_choice",
+    "light_humor_or_irony",
+  ])
+  assert.equal(drill.chaos_level, "controlled")
+  assert.equal(drill.requires_spontaneous_answer, true)
+  assert.ok(drill.turns.length >= 6)
+  assert.ok(drill.turns.some((turn) => turn.chaos_type === "interruption"))
+  assert.ok(drill.turns.some((turn) => turn.chaos_type === "misunderstanding"))
+  assert.ok(drill.turns.some((turn) => turn.chaos_type === "topic_shift"))
+  assert.ok(drill.turns.some((turn) => turn.chaos_type === "humor_or_irony"))
+  assert.match(drill.turns.find((turn) => turn.chaos_type === "interruption").prompt, /interrupts/)
 })

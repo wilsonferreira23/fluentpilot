@@ -42,3 +42,19 @@ Por que:
 ```
 
 O agente nao mostra engenharia interna sem pedido explicito.
+
+## Pragmática e caos controlado
+
+Fluência funcional não é só reconhecer chunks e responder perguntas previsíveis.
+
+O método deve incluir simulações curtas de conversa humana bagunçada:
+
+- interrupções;
+- respostas vagas;
+- mal-entendidos;
+- mudança de assunto;
+- defesa rápida de uma escolha;
+- humor ou ironia leve;
+- necessidade de pedir clarificação sem travar.
+
+Esses drills continuam pequenos para não sobrecarregar o aluno, mas devem aparecer regularmente quando o aluno já tem chunks suficientes para sustentar uma resposta.

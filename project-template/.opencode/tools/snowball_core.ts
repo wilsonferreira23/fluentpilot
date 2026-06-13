@@ -782,35 +782,73 @@ export function buildUnpredictableConversationDrill(args: {
   const surprise = args.surprise?.trim() || "the other person asks an unexpected follow-up question"
   const firstChunk = args.chunks[0] ?? "I need to"
   const secondChunk = args.chunks[1] ?? "Could you help me"
+  const thirdChunk = args.chunks[2] ?? "I think we should"
 
   return {
     type: "unpredictable_conversation",
     objective: track.id,
+    chaos_level: "controlled",
+    requires_spontaneous_answer: true,
+    pragmatic_skills: [
+      "interruption_recovery",
+      "clarification",
+      "topic_shift",
+      "defend_choice",
+      "light_humor_or_irony",
+    ],
     multiple_choice_allowed: false,
     allowed_support: ["repeat", "slow_down", "clarify"],
     turns: [
       {
         speaker: "agent",
         prompt: `Situation: ${surprise}. Respond using "${firstChunk}".`,
+        chaos_type: "unexpected_constraint",
         repair_strategy: "answer directly",
       },
       {
         speaker: "agent",
         prompt: `The person gives an unclear answer. Ask for clarification using "${secondChunk}".`,
+        chaos_type: "misunderstanding",
         repair_strategy: "ask for clarification",
       },
       {
         speaker: "agent",
-        prompt: "The person changes one detail. Keep the conversation going without translating.",
+        prompt: "The person interrupts you mid-sentence. Recover, acknowledge the interruption, and finish your point.",
+        chaos_type: "interruption",
+        repair_strategy: "recover and finish the point",
+      },
+      {
+        speaker: "agent",
+        prompt: `The person challenges your choice. Defend it briefly using "${thirdChunk}" or your own words.`,
+        chaos_type: "defend_choice",
+        repair_strategy: "give a short reason",
+      },
+      {
+        speaker: "agent",
+        prompt: "The person changes the subject suddenly. Bridge back politely or follow the new topic for one sentence.",
+        chaos_type: "topic_shift",
         repair_strategy: "confirm the new detail",
       },
       {
         speaker: "agent",
+        prompt: "The person makes a light joke or ironic comment. React naturally, then continue the task.",
+        chaos_type: "humor_or_irony",
+        repair_strategy: "acknowledge tone and continue",
+      },
+      {
+        speaker: "agent",
         prompt: "Close the interaction politely and say what you will do next.",
+        chaos_type: "closing",
         repair_strategy: "close and summarize",
       },
     ],
-    rule: "No multiple choice; the learner must produce a response under mild uncertainty.",
+    scoring_focus: [
+      "kept speaking after disruption",
+      "asked for clarification instead of freezing",
+      "gave a reason for a choice",
+      "handled tone without over-explaining",
+    ],
+    rule: "No multiple choice; the learner must produce a response under mild uncertainty and pragmatic noise.",
   }
 }
 

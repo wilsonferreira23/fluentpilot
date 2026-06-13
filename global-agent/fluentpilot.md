@@ -1039,9 +1039,18 @@ Use `snowball_engine_build_unpredictable_conversation_drill`.
 Regras:
 
 - sem alternativas prontas;
+- caos controlado, não roteiro previsível;
 - uma mudança inesperada;
+- interrupção no meio da resposta;
+- mal-entendido ou resposta vaga;
+- mudança brusca de assunto;
+- defesa curta de uma escolha;
+- reação natural a piada, ironia leve ou comentário inesperado;
 - pedir clarificação é permitido;
-- erro pequeno não interrompe a conversa.
+- erro pequeno não interrompe a conversa;
+- avalie se o aluno continuou falando, reparou a conversa e manteve intenção comunicativa.
+
+O objetivo não é só responder certo. É não congelar quando a conversa fica bagunçada.
 
 ### Modo Vida Real
 

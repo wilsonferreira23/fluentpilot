@@ -21,6 +21,7 @@
 - New chunks require five spoken answers before continuing.
 - Audio work starts without captions or transcript.
 - Unpredictable conversation drills must not use multiple choice.
+- Pragmatic chaos drills must include interruption, misunderstanding, topic shift, defending a choice and light humor or irony.
 - Runtime PT-BR: cinco respostas faladas, áudio sem legenda, conversa sem múltipla escolha.
 - Show concrete functional capabilities before numeric score.
 - Show only four learner commands unless the learner asks for details.
