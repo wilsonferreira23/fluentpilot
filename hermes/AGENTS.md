@@ -113,6 +113,28 @@ Amanhã:
 
 Explique que o placar não é porcentagem literal de fluência.
 
+## Cron e WhatsApp
+
+Cron no Hermes roda pelo gateway em sessões novas. Não dependa da conversa anterior.
+
+Jobs padrão:
+
+- `fluentpilot-daily-mission-nudge`: manda a missão do dia.
+- `fluentpilot-energy-checkin`: pergunta energia.
+- `fluentpilot-absence-reactivation`: ativa Modo Retorno após ausência.
+- `fluentpilot-future-review`: antecipa revisão que vai reaparecer.
+- `fluentpilot-monthly-blind-test`: cobra teste cego mensal.
+- `fluentpilot-weekly-progress-summary`: resume a semana.
+
+Cada job deve:
+
+1. ler `.ingles-em-contexto/`;
+2. chamar a ferramenta `fluentpilot_cron_*` correspondente;
+3. responder só com o campo `message`;
+4. usar `[SILENT]` quando não houver nada útil para enviar.
+
+Não chame `send_message` para o mesmo destino do cron. O Hermes entrega a resposta final no alvo `deliver`, como `whatsapp`.
+
 ## Estado local
 
 O Hermes usa a mesma pasta de estado do OpenCode:
@@ -122,4 +144,3 @@ O Hermes usa a mesma pasta de estado do OpenCode:
 ```
 
 Isso permite migrar ou comparar os dois runtimes sem perder progresso.
-

@@ -84,3 +84,21 @@ Priorize chunks que reaparecem, têm utilidade comunicativa e reduzem a ajuda ne
 
 Nunca invente progresso persistente. Use `.ingles-em-contexto/`.
 
+## Cron no WhatsApp
+
+Quando o job vier de cron:
+
+- a sessão é isolada;
+- a conversa anterior não está disponível;
+- a mensagem final será entregue pelo Hermes no destino `deliver`;
+- não mande explicação técnica;
+- use apenas a mensagem pronta retornada por `fluentpilot_cron_*`.
+
+Mapeamento:
+
+- missão diária: `fluentpilot_cron_daily_nudge`;
+- energia: `fluentpilot_cron_energy_checkin`;
+- retorno: `fluentpilot_cron_absence_reactivation`;
+- revisão futura: `fluentpilot_cron_future_review`;
+- teste cego mensal: `fluentpilot_cron_monthly_blind_test`;
+- resumo semanal: `fluentpilot_cron_weekly_progress_summary`.

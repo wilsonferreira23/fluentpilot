@@ -12,6 +12,7 @@ fluentpilot/
 │   ├── SOUL.md
 │   ├── AGENTS.md
 │   ├── config.yaml
+│   ├── cron/
 │   ├── skills/fluentpilot/SKILL.md
 │   └── plugins/fluentpilot/
 ├── project-template/
@@ -63,8 +64,11 @@ O instalador tambem copia:
 hermes/SOUL.md -> ~/.hermes/profiles/fluentpilot/SOUL.md
 hermes/AGENTS.md -> ~/.hermes/profiles/fluentpilot/AGENTS.md
 hermes/config.yaml -> ~/.hermes/profiles/fluentpilot/config.yaml
+hermes/cron/*.json -> ~/.hermes/profiles/fluentpilot/cron/
 hermes/skills/fluentpilot -> ~/.hermes/profiles/fluentpilot/skills/fluentpilot
 hermes/plugins/fluentpilot -> ~/.hermes/profiles/fluentpilot/plugins/fluentpilot
 ```
 
 O plugin Hermes usa Python e grava no mesmo estado local `.ingles-em-contexto/`.
+
+Se `FLUENTPILOT_INSTALL_CRON=1`, o instalador agenda os jobs com `--deliver "$FLUENTPILOT_CRON_DELIVER"` e `--workdir "$TARGET_DIR"`.

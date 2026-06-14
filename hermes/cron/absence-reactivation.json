@@ -1,0 +1,9 @@
+{
+  "name": "fluentpilot-absence-reactivation",
+  "schedule": "0 12 * * *",
+  "deliver_default": "whatsapp",
+  "skill": "fluentpilot",
+  "workdir": "$FLUENTPILOT_HOME",
+  "prompt": "Você está rodando como cron isolado do FluentPilot. Não dependa do histórico da conversa. Use fluentpilot_cron_absence_reactivation com days_threshold=3 para ler .ingles-em-contexto. Responda somente com o campo message retornado pela ferramenta. Se a mensagem começar com [SILENT], mantenha exatamente [SILENT]. Final answer deve ser a mensagem crua para WhatsApp."
+}
+

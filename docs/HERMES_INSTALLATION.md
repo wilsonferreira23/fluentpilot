@@ -39,6 +39,7 @@ Isso cria ou atualiza:
 ├── SOUL.md
 ├── AGENTS.md
 ├── config.yaml
+├── cron/
 ├── skills/fluentpilot/SKILL.md
 └── plugins/fluentpilot/
 ```
@@ -128,6 +129,12 @@ O plugin Hermes expõe ferramentas equivalentes às principais ferramentas do Op
 - `snowball_engine_complete_daily_mission`
 - `media_clips_probe`
 - `media_clips_extract`
+- `fluentpilot_cron_daily_nudge`
+- `fluentpilot_cron_energy_checkin`
+- `fluentpilot_cron_absence_reactivation`
+- `fluentpilot_cron_future_review`
+- `fluentpilot_cron_monthly_blind_test`
+- `fluentpilot_cron_weekly_progress_summary`
 
 O comportamento esperado é o mesmo:
 
@@ -159,6 +166,47 @@ Se quiser usar outra pasta:
 FLUENTPILOT_HOME="/caminho/do/projeto" fluentpilot chat
 ```
 
+## WhatsApp e cron
+
+O Hermes roda cron pelo gateway. Para os nudges chegarem no WhatsApp, configure o WhatsApp no Hermes e mantenha o gateway ativo:
+
+```bash
+hermes gateway start
+```
+
+Depois instale os jobs padrão:
+
+```bash
+FLUENTPILOT_INSTALL_CRON=1 FLUENTPILOT_CRON_DELIVER=whatsapp ./install-hermes.sh
+```
+
+Jobs instalados:
+
+```text
+fluentpilot-daily-mission-nudge      08:00 todos os dias
+fluentpilot-energy-checkin           19:30 todos os dias
+fluentpilot-absence-reactivation     12:00 todos os dias
+fluentpilot-future-review            18:00 segunda a sábado
+fluentpilot-monthly-blind-test       08:30 no dia 1 de cada mês
+fluentpilot-weekly-progress-summary  20:00 domingo
+```
+
+Cada cron job é autocontido porque o Hermes executa jobs em sessões novas. O job lê `.ingles-em-contexto/`, chama a ferramenta `fluentpilot_cron_*` correspondente e entrega só a mensagem final.
+
+Para listar:
+
+```bash
+fluentpilot cron list
+```
+
+Para testar um job:
+
+```bash
+fluentpilot cron run fluentpilot-daily-mission-nudge
+```
+
+Se um job não tiver nada útil para enviar, ele responde `[SILENT]` e o Hermes suprime a entrega.
+
 ## Áudio local
 
 O Hermes também expõe `media_clips_probe` e `media_clips_extract`.
@@ -177,6 +225,7 @@ Esta integração segue os pontos oficiais:
 - plugins Python ficam em `~/.hermes/plugins/<plugin>/`;
 - o plugin precisa de `plugin.yaml`, `schemas.py`, `tools.py` e `__init__.py`;
 - ferramentas são registradas com `ctx.register_tool`;
+- cron jobs podem usar `deliver="whatsapp"` e `workdir` para rodar dentro do projeto;
 - profiles ficam em diretórios separados e podem ter `SOUL.md`, `config.yaml`, skills e plugins.
 
 Referências:
@@ -184,4 +233,6 @@ Referências:
 - [Hermes installation](https://hermes-agent.nousresearch.com/docs/getting-started/installation/)
 - [Hermes plugins](https://hermes-agent.nousresearch.com/docs/user-guide/features/plugins)
 - [Build a Hermes plugin](https://hermes-agent.nousresearch.com/docs/guides/build-a-hermes-plugin)
+- [Hermes cron](https://hermes-agent.nousresearch.com/docs/user-guide/features/cron)
+- [Hermes messaging gateway](https://hermes-agent.nousresearch.com/docs/user-guide/messaging)
 - [Hermes profile distributions](https://hermes-agent.nousresearch.com/docs/user-guide/profile-distributions)

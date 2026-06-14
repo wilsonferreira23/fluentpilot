@@ -1,0 +1,9 @@
+{
+  "name": "fluentpilot-weekly-progress-summary",
+  "schedule": "0 20 * * 0",
+  "deliver_default": "whatsapp",
+  "skill": "fluentpilot",
+  "workdir": "$FLUENTPILOT_HOME",
+  "prompt": "Você está rodando como cron isolado do FluentPilot. Não dependa do histórico da conversa. Use fluentpilot_cron_weekly_progress_summary para ler .ingles-em-contexto e gerar um resumo curto. Responda somente com o campo message retornado pela ferramenta. Final answer deve ser a mensagem crua para WhatsApp."
+}
+

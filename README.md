@@ -69,6 +69,15 @@ Ele não quer que você vire especialista em método. Ele quer que você faça a
 - uma conversa curta sem múltipla escolha;
 - uma tarefa transferida para vida real.
 
+No Hermes, ele também pode agir pelo WhatsApp com cron jobs:
+
+- mandar a missão do dia;
+- perguntar energia;
+- chamar Modo Retorno se você sumir;
+- antecipar revisão antes de reaparecer no conteúdo;
+- cobrar teste cego mensal;
+- resumir a semana.
+
 ## O que ele treina
 
 ### Speaking desde cedo
@@ -156,6 +165,7 @@ Por dentro, o projeto usa:
 - **TypeScript tools**: funções determinísticas em `.opencode/tools/`.
 - **Hermes profile**: distribuição em `hermes/` com `SOUL.md`, `AGENTS.md`, skill e plugin Python.
 - **Hermes plugin**: ferramentas determinísticas em `hermes/plugins/fluentpilot/`.
+- **Hermes cron**: nudges automáticos via gateway, incluindo WhatsApp.
 - **Node.js test runner**: testes com `node --test`, sem framework pesado.
 - **JSON local**: progresso, missões, revisão e métricas ficam em `.ingles-em-contexto/`.
 - **ffmpeg opcional**: extração de pequenos trechos de áudio quando o usuário fornece mídia local.
@@ -172,6 +182,7 @@ snowball_core.ts     funções puras testáveis
 snowball_engine.ts   tools OpenCode + persistência
 media_clips.ts       áudio local opcional
 hermes/plugins/      plugin Python para Hermes
+hermes/cron/         templates de nudges automáticos
 ```
 
 Isso permite testar a lógica do método sem depender da resposta criativa de uma LLM.
@@ -349,9 +360,17 @@ O instalador Hermes copia:
 
 - `hermes/SOUL.md` para o profile `fluentpilot`;
 - `hermes/AGENTS.md` e `hermes/config.yaml`;
+- os cron templates `hermes/cron/*.json`;
 - o skill `hermes/skills/fluentpilot/SKILL.md`;
 - o plugin Python `hermes/plugins/fluentpilot/`;
 - o projeto de estudo para `~/fluentpilot-estudos`.
+
+Para instalar nudges automáticos no WhatsApp:
+
+```bash
+FLUENTPILOT_INSTALL_CRON=1 FLUENTPILOT_CRON_DELIVER=whatsapp ./install-hermes.sh
+hermes gateway start
+```
 
 Guia completo: [`docs/HERMES_INSTALLATION.md`](docs/HERMES_INSTALLATION.md).
 
@@ -367,7 +386,8 @@ O agente combina:
 - listening sem legenda;
 - transferência para vida real;
 - score funcional não literal;
-- modos para baixa energia e retorno.
+- modos para baixa energia e retorno;
+- cron jobs Hermes para WhatsApp.
 
 Arquitetura e notas técnicas ficam em [`docs/`](docs/).
 

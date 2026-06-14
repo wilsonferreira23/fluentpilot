@@ -1,8 +1,6 @@
 import assert from "node:assert/strict"
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs"
+import { existsSync, readFileSync } from "node:fs"
 import { spawnSync } from "node:child_process"
-import os from "node:os"
-import path from "node:path"
 import test from "node:test"
 
 const root = process.cwd()
@@ -18,6 +16,12 @@ const requiredFiles = [
   "hermes/plugins/fluentpilot/__init__.py",
   "hermes/plugins/fluentpilot/schemas.py",
   "hermes/plugins/fluentpilot/tools.py",
+  "hermes/cron/daily-mission-nudge.json",
+  "hermes/cron/energy-checkin.json",
+  "hermes/cron/absence-reactivation.json",
+  "hermes/cron/future-review.json",
+  "hermes/cron/monthly-blind-test.json",
+  "hermes/cron/weekly-progress-summary.json",
   "docs/HERMES_INSTALLATION.md",
   "install-hermes.sh",
 ]
@@ -51,6 +55,31 @@ test("Hermes docs and prompts preserve FluentPilot behavior contract", () => {
   assert.match(docs, /fluentpilot plugins enable fluentpilot/)
   assert.match(config, /plugins:/)
   assert.match(config, /fluentpilot/)
+})
+
+test("Hermes cron templates are WhatsApp-ready and self-contained", () => {
+  const templates = [
+    "hermes/cron/daily-mission-nudge.json",
+    "hermes/cron/energy-checkin.json",
+    "hermes/cron/absence-reactivation.json",
+    "hermes/cron/future-review.json",
+    "hermes/cron/monthly-blind-test.json",
+    "hermes/cron/weekly-progress-summary.json",
+  ]
+  for (const file of templates) {
+    const template = JSON.parse(readFileSync(file, "utf8"))
+    assert.match(template.name, /^fluentpilot-/)
+    assert.equal(template.deliver_default, "whatsapp")
+    assert.equal(template.skill, "fluentpilot")
+    assert.match(template.prompt, /\.ingles-em-contexto/)
+    assert.match(template.prompt, /responda somente|final answer/i)
+  }
+
+  const install = readFileSync("install-hermes.sh", "utf8")
+  assert.match(install, /FLUENTPILOT_INSTALL_CRON/)
+  assert.match(install, /FLUENTPILOT_CRON_DELIVER/)
+  assert.match(install, /--deliver "\$CRON_DELIVER"/)
+  assert.match(install, /--workdir "\$TARGET_DIR"/)
 })
 
 test("Hermes plugin is valid Python and registers core FluentPilot tools", () => {
@@ -93,6 +122,12 @@ required = [
     "snowball_engine_calculate_fluency_score",
     "media_clips_probe",
     "media_clips_extract",
+    "fluentpilot_cron_daily_nudge",
+    "fluentpilot_cron_energy_checkin",
+    "fluentpilot_cron_absence_reactivation",
+    "fluentpilot_cron_future_review",
+    "fluentpilot_cron_monthly_blind_test",
+    "fluentpilot_cron_weekly_progress_summary",
 ]
 missing = [name for name in required if name not in ctx.tools]
 assert not missing, missing
@@ -124,6 +159,19 @@ assert listening["drill"]["text_allowed_first"] is False
 dashboard = json.loads(ctx.tools["snowball_engine_functional_capability_dashboard"]["handler"]({"capabilities_json": '{"ask_help":"yes","past_story":"no"}'}))
 assert dashboard["ok"] is True
 assert dashboard["dashboard"]["items"][0]["label"] == "pedir ajuda"
+daily = json.loads(ctx.tools["fluentpilot_cron_daily_nudge"]["handler"]({"objective": "travel"}))
+assert daily["ok"] is True
+assert "Missão de hoje" in daily["message"]
+assert "Responda começar" in daily["message"]
+energy = json.loads(ctx.tools["fluentpilot_cron_energy_checkin"]["handler"]({}))
+assert energy["ok"] is True
+assert "Energia hoje" in energy["message"]
+absence = json.loads(ctx.tools["fluentpilot_cron_absence_reactivation"]["handler"]({"days_threshold": 3}))
+assert absence["ok"] is True
+assert "Você não perdeu nada" in absence["message"] or absence["message"].startswith("[SILENT]")
+weekly = json.loads(ctx.tools["fluentpilot_cron_weekly_progress_summary"]["handler"]({}))
+assert weekly["ok"] is True
+assert "Resumo da semana" in weekly["message"]
 `
   const result = spawnSync(python, ["-c", script], { cwd: root, encoding: "utf8" })
   assert.equal(result.status, 0, result.stderr || result.stdout)

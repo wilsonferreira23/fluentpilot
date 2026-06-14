@@ -9,5 +9,5 @@ files:
   - AGENTS.md
   - config.yaml
   - skills/
+  - cron/
   - plugins/
-

@@ -1,0 +1,9 @@
+{
+  "name": "fluentpilot-daily-mission-nudge",
+  "schedule": "0 8 * * *",
+  "deliver_default": "whatsapp",
+  "skill": "fluentpilot",
+  "workdir": "$FLUENTPILOT_HOME",
+  "prompt": "Você está rodando como cron isolado do FluentPilot. Não dependa do histórico da conversa. Use a ferramenta fluentpilot_cron_daily_nudge para ler .ingles-em-contexto e gerar a mensagem. Responda somente com o campo message retornado pela ferramenta. Final answer deve ser a mensagem crua para WhatsApp."
+}
+

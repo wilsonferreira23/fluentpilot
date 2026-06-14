@@ -229,4 +229,41 @@ TOOLS = [
         },
         ["media_path", "episode_id", "clips_json"],
     ),
+    _schema(
+        "fluentpilot_cron_daily_nudge",
+        "fluentpilot_cron_daily_nudge",
+        "Build the daily WhatsApp mission nudge from local FluentPilot state.",
+        {
+            "objective": {"type": "string", "enum": ["travel", "conversation", "work", "media", "general"]},
+            "energy": {"type": "string", "enum": ["low", "medium", "high"]},
+        },
+    ),
+    _schema(
+        "fluentpilot_cron_energy_checkin",
+        "fluentpilot_cron_energy_checkin",
+        "Build a short WhatsApp energy check-in that can route to normal, low-energy, or war mode.",
+    ),
+    _schema(
+        "fluentpilot_cron_absence_reactivation",
+        "fluentpilot_cron_absence_reactivation",
+        "Build a guilt-free return-mode WhatsApp message only after absence threshold.",
+        {
+            "days_threshold": {"type": "integer"},
+        },
+    ),
+    _schema(
+        "fluentpilot_cron_future_review",
+        "fluentpilot_cron_future_review",
+        "Build a WhatsApp review message for chunks likely to pay off in upcoming content.",
+    ),
+    _schema(
+        "fluentpilot_cron_monthly_blind_test",
+        "fluentpilot_cron_monthly_blind_test",
+        "Build a monthly blind-test WhatsApp prompt, or [SILENT] when not due.",
+    ),
+    _schema(
+        "fluentpilot_cron_weekly_progress_summary",
+        "fluentpilot_cron_weekly_progress_summary",
+        "Build a concise WhatsApp weekly progress summary from local FluentPilot state.",
+    ),
 ]

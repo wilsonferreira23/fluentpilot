@@ -11,3 +11,6 @@ toolsets:
     - web
     - fluentpilot
 
+cron:
+  wrap_response: false
+  script_timeout_seconds: 300

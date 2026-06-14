@@ -12,7 +12,7 @@ import re
 import shutil
 import subprocess
 import tempfile
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -316,6 +316,8 @@ def _ensure_snowball() -> list[str]:
         "SPEAKING_DRILLS.json": {"schema_version": SCHEMA_VERSION, "history": []},
         "LISTENING_DRILLS.json": {"schema_version": SCHEMA_VERSION, "history": []},
         "CONVERSATION_DRILLS.json": {"schema_version": SCHEMA_VERSION, "history": []},
+        "BLIND_TESTS.json": {"schema_version": SCHEMA_VERSION, "tests": [], "last_blind_test_at": None},
+        "CRON_NOTIFICATIONS.json": {"schema_version": SCHEMA_VERSION, "history": []},
     }
     created: list[str] = []
     for name, value in defaults.items():
@@ -342,6 +344,91 @@ def _append_event(event_type: str, payload: dict[str, Any], source: str = "agent
     meta["updated_at"] = event["timestamp"]
     _write_json(meta_path, meta)
     return event
+
+
+def _read_events(limit: int = 200) -> list[dict[str, Any]]:
+    events_path = _memory_path("EVENTS.jsonl")
+    if not events_path.exists():
+        return []
+    events: list[dict[str, Any]] = []
+    for line in events_path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        try:
+            events.append(json.loads(line))
+        except Exception:
+            continue
+    return events[-limit:]
+
+
+def _parse_iso(value: Any) -> datetime | None:
+    if not value:
+        return None
+    try:
+        text = str(value).replace("Z", "+00:00")
+        parsed = datetime.fromisoformat(text)
+        return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+    except Exception:
+        return None
+
+
+def _last_activity_at() -> datetime | None:
+    meta = _read_json(_memory_path("META.json"), {})
+    candidates = [_parse_iso(meta.get("updated_at"))]
+    for event in _read_events(200):
+        candidates.append(_parse_iso(event.get("timestamp")))
+    valid = [item for item in candidates if item is not None]
+    return max(valid) if valid else None
+
+
+def _days_since_last_activity() -> float | None:
+    last = _last_activity_at()
+    if not last:
+        return None
+    return (datetime.now(timezone.utc) - last).total_seconds() / 86400
+
+
+def _best_chunk(default: str = "I need to") -> str:
+    mission = _read_json(_memory_path("DAILY_MISSION.json"), {})
+    current = mission.get("current") or {}
+    for task in current.get("tasks", []):
+        prompt = str(task.get("prompt", ""))
+        match = re.search(r'"([^"]{2,80})"', prompt)
+        if match:
+            return match.group(1)
+
+    capital = _read_json(_memory_path("SNOWBALL_CAPITAL.json"), {"items": {}}).get("items", {})
+    if isinstance(capital, dict) and capital:
+        ranked = sorted(
+            capital.values(),
+            key=lambda item: (
+                float(item.get("estimated_future_value", 0) or 0),
+                float(item.get("production", item.get("production_level", 0)) or 0),
+            ),
+            reverse=True,
+        )
+        chunk = ranked[0].get("chunk") if ranked else None
+        if chunk:
+            return str(chunk)
+
+    mastery = _read_json(_memory_path("MASTERY.json"), {"items": {}}).get("items", {})
+    if isinstance(mastery, dict) and mastery:
+        key = next(iter(mastery.keys()))
+        return str(mastery[key].get("term") or key)
+    return default
+
+
+def _record_cron_message(kind: str, message: str, silent: bool = False) -> None:
+    state = _read_json(_memory_path("CRON_NOTIFICATIONS.json"), {"schema_version": SCHEMA_VERSION, "history": []})
+    state.setdefault("history", []).append({
+        "kind": kind,
+        "message": message,
+        "silent": silent,
+        "created_at": _now(),
+    })
+    state["history"] = state["history"][-200:]
+    _write_json(_memory_path("CRON_NOTIFICATIONS.json"), state)
+    _append_event("cron_notification_built", {"kind": kind, "silent": silent}, "cron")
 
 
 def _mode_from_coverage(coverage: float, recent_comprehension: float = 0, high_value_items: int = 0, onboarding: bool = False) -> dict[str, str]:
@@ -927,6 +1014,196 @@ def snowball_engine_complete_daily_mission(args: dict, **kwargs) -> str:
         return _ok({"completion": completion})
     except Exception as exc:
         return _error("complete_daily_mission_failed", exc)
+
+
+def fluentpilot_cron_daily_nudge(args: dict, **kwargs) -> str:
+    try:
+        _ensure_memory()
+        _ensure_snowball()
+        objective = args.get("objective", "general")
+        energy = args.get("energy", "medium")
+        mission_result = json.loads(snowball_engine_build_daily_mission({
+            "objective": objective,
+            "energy": energy,
+        }))
+        if not mission_result.get("ok"):
+            return _error("daily_nudge_failed", mission_result)
+        mission = mission_result["mission"]
+        first_task = mission["tasks"][0]["prompt"] if mission.get("tasks") else mission.get("first_action", "")
+        message = "\n".join([
+            "Missão de hoje",
+            f"Tempo: {mission.get('estimated_minutes', 12)} minutos",
+            f"Objetivo: {mission.get('objective_label') or mission.get('objective', 'inglês geral')}",
+            "",
+            "Hoje você vai fazer:",
+            first_task,
+            "",
+            "Por quê:",
+            mission.get("why_this_matters", "É a próxima ação de maior retorno para manter constância sem decidir o que estudar."),
+            "",
+            "Primeira ação:",
+            mission.get("first_action", first_task),
+            "",
+            "Responda começar quando quiser fazer agora.",
+        ])
+        _record_cron_message("daily_mission_nudge", message)
+        return _ok({"message": message, "mission": mission})
+    except Exception as exc:
+        return _error("daily_nudge_failed", exc)
+
+
+def fluentpilot_cron_energy_checkin(args: dict, **kwargs) -> str:
+    try:
+        _ensure_memory()
+        _ensure_snowball()
+        message = "\n".join([
+            "Energia hoje?",
+            "",
+            "Responda só uma opção:",
+            "1. normal",
+            "2. baixa",
+            "3. só 3 minutos",
+            "",
+            "Se responder 2 ou 3, eu reduzo a missão automaticamente.",
+        ])
+        _record_cron_message("energy_checkin", message)
+        return _ok({"message": message})
+    except Exception as exc:
+        return _error("energy_checkin_failed", exc)
+
+
+def fluentpilot_cron_absence_reactivation(args: dict, **kwargs) -> str:
+    try:
+        _ensure_memory()
+        _ensure_snowball()
+        threshold = int(args.get("days_threshold", 3) or 3)
+        days = _days_since_last_activity()
+        if days is not None and days < threshold:
+            message = "[SILENT] aluno ativo; modo retorno ainda não é necessário."
+            _record_cron_message("absence_reactivation", message, silent=True)
+            return _ok({"message": message, "days_since_last_activity": round(days, 2), "silent": True})
+        chunk = _best_chunk("I need to")
+        message = "\n".join([
+            "Você não perdeu nada.",
+            "",
+            "Modo retorno",
+            "Tempo: 5 minutos",
+            "",
+            f"1. Relembrar: \"{chunk}\"",
+            f"2. Usar uma frase com \"{chunk}\" sobre hoje",
+            "3. Fechar",
+            "",
+            "Responda voltei e fazemos só isso. Sem backlog.",
+        ])
+        _record_cron_message("absence_reactivation", message)
+        return _ok({"message": message, "days_since_last_activity": None if days is None else round(days, 2), "silent": False})
+    except Exception as exc:
+        return _error("absence_reactivation_failed", exc)
+
+
+def fluentpilot_cron_future_review(args: dict, **kwargs) -> str:
+    try:
+        _ensure_memory()
+        _ensure_snowball()
+        corpus = _read_json(_memory_path("SERIES_CORPUS.json"), {"chunks": {}})
+        capital = _read_json(_memory_path("SNOWBALL_CAPITAL.json"), {"items": {}}).get("items", {})
+        candidates: list[dict[str, Any]] = []
+        for chunk, item in (corpus.get("chunks") or {}).items():
+            future = item.get("future_episodes") or []
+            if future:
+                candidates.append({
+                    "chunk": chunk,
+                    "future_episodes": future,
+                    "estimated_future_value": item.get("estimated_future_value", 0),
+                })
+        if not candidates and isinstance(capital, dict):
+            for item in capital.values():
+                chunk = item.get("chunk")
+                if chunk:
+                    candidates.append({"chunk": chunk, "future_episodes": item.get("future_episodes", []), "estimated_future_value": item.get("estimated_future_value", 0)})
+        if not candidates:
+            message = "[SILENT] sem revisão futura disponível."
+            _record_cron_message("future_review", message, silent=True)
+            return _ok({"message": message, "items": [], "silent": True})
+        candidates.sort(key=lambda item: float(item.get("estimated_future_value", 0) or 0), reverse=True)
+        selected = candidates[:3]
+        lines = [
+            "Revisão rápida para render nos próximos episódios",
+            "",
+            "Complete sem olhar:",
+        ]
+        for index, item in enumerate(selected, 1):
+            lines.append(f'{index}. "{item["chunk"]} ___"')
+        lines.extend([
+            "",
+            "Por quê:",
+            "Essas expressões tendem a voltar no conteúdo, então revisar agora aumenta a chance de reconhecer naturalmente depois.",
+        ])
+        message = "\n".join(lines)
+        _record_cron_message("future_review", message)
+        return _ok({"message": message, "items": selected, "silent": False})
+    except Exception as exc:
+        return _error("future_review_failed", exc)
+
+
+def fluentpilot_cron_monthly_blind_test(args: dict, **kwargs) -> str:
+    try:
+        _ensure_memory()
+        _ensure_snowball()
+        blind = _read_json(_memory_path("BLIND_TESTS.json"), {"tests": [], "last_blind_test_at": None})
+        last = _parse_iso(blind.get("last_blind_test_at"))
+        due = last is None or datetime.now(timezone.utc) - last >= timedelta(days=30)
+        if not due:
+            message = "[SILENT] teste cego mensal ainda não venceu."
+            _record_cron_message("monthly_blind_test", message, silent=True)
+            return _ok({"message": message, "due": False, "silent": True})
+        message = "\n".join([
+            "Teste cego do mês",
+            "",
+            "Escolha um trecho novo e assista/ouça sem preparação.",
+            "",
+            "Depois me responda:",
+            "1. ideia geral",
+            "2. dois detalhes",
+            "3. o que travou",
+            "",
+            "Sem legenda primeiro. O objetivo é medir compreensão real.",
+        ])
+        blind["last_blind_test_at"] = _now()
+        blind.setdefault("tests", []).append({"created_at": blind["last_blind_test_at"], "source": "cron"})
+        _write_json(_memory_path("BLIND_TESTS.json"), blind)
+        _record_cron_message("monthly_blind_test", message)
+        return _ok({"message": message, "due": True, "silent": False})
+    except Exception as exc:
+        return _error("monthly_blind_test_failed", exc)
+
+
+def fluentpilot_cron_weekly_progress_summary(args: dict, **kwargs) -> str:
+    try:
+        _ensure_memory()
+        _ensure_snowball()
+        score_state = _read_json(_memory_path("FLUENCY_SCORE.json"), {"score": 0, "max": 100})
+        events = _read_events(500)
+        cutoff = datetime.now(timezone.utc) - timedelta(days=7)
+        recent = [event for event in events if (_parse_iso(event.get("timestamp")) or datetime.fromtimestamp(0, tz=timezone.utc)) >= cutoff]
+        completed = [event for event in recent if event.get("type") == "daily_mission_completed"]
+        mastery = [event for event in recent if event.get("type") == "mastery_updated"]
+        message = "\n".join([
+            "Resumo da semana FluentPilot",
+            "",
+            f"Missões concluídas: {len(completed)}",
+            f"Itens praticados: {len(mastery)}",
+            f"Placar funcional: {score_state.get('score', 0)}/{score_state.get('max', 100)}",
+            "",
+            "Próximo foco:",
+            "Manter uma missão curta e falar antes de consumir mais conteúdo.",
+            "",
+            "Responda continuar para receber a próxima ação.",
+        ])
+        _record_cron_message("weekly_progress_summary", message)
+        return _ok({"message": message, "missions_completed": len(completed), "items_practiced": len(mastery)})
+    except Exception as exc:
+        return _error("weekly_progress_failed", exc)
 
 
 def media_clips_probe(args: dict, **kwargs) -> str:

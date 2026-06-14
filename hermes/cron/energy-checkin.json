@@ -1,0 +1,8 @@
+{
+  "name": "fluentpilot-energy-checkin",
+  "schedule": "30 19 * * *",
+  "deliver_default": "whatsapp",
+  "skill": "fluentpilot",
+  "workdir": "$FLUENTPILOT_HOME",
+  "prompt": "Você está rodando como cron isolado do FluentPilot. Não dependa do histórico da conversa. Use .ingles-em-contexto como estado local e chame fluentpilot_cron_energy_checkin para gerar um check-in curto. Responda somente com o campo message retornado pela ferramenta. Final answer deve ser a mensagem crua para WhatsApp."
+}

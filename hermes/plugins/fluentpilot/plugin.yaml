@@ -24,3 +24,9 @@ provides_tools:
   - snowball_engine_complete_daily_mission
   - media_clips_probe
   - media_clips_extract
+  - fluentpilot_cron_daily_nudge
+  - fluentpilot_cron_energy_checkin
+  - fluentpilot_cron_absence_reactivation
+  - fluentpilot_cron_future_review
+  - fluentpilot_cron_monthly_blind_test
+  - fluentpilot_cron_weekly_progress_summary
