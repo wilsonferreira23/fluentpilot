@@ -22,6 +22,7 @@ const requiredFiles = [
   "hermes/cron/future-review.json",
   "hermes/cron/monthly-blind-test.json",
   "hermes/cron/weekly-progress-summary.json",
+  "hermes/cron/daily-audio-nudge.json",
   "docs/HERMES_INSTALLATION.md",
   "install-hermes.sh",
 ]
@@ -65,6 +66,7 @@ test("Hermes cron templates are WhatsApp-ready and self-contained", () => {
     "hermes/cron/future-review.json",
     "hermes/cron/monthly-blind-test.json",
     "hermes/cron/weekly-progress-summary.json",
+    "hermes/cron/daily-audio-nudge.json",
   ]
   for (const file of templates) {
     const template = JSON.parse(readFileSync(file, "utf8"))
@@ -128,6 +130,12 @@ required = [
     "fluentpilot_cron_future_review",
     "fluentpilot_cron_monthly_blind_test",
     "fluentpilot_cron_weekly_progress_summary",
+    "fluentpilot_cron_daily_audio_nudge",
+    "fluentpilot_pronunciation_bootstrap",
+    "fluentpilot_pronunciation_build_model_audio",
+    "fluentpilot_pronunciation_build_shadowing_drill",
+    "fluentpilot_pronunciation_evaluate_student_audio",
+    "fluentpilot_pronunciation_select_focus",
 ]
 missing = [name for name in required if name not in ctx.tools]
 assert not missing, missing
@@ -172,6 +180,23 @@ assert "Você não perdeu nada" in absence["message"] or absence["message"].star
 weekly = json.loads(ctx.tools["fluentpilot_cron_weekly_progress_summary"]["handler"]({}))
 assert weekly["ok"] is True
 assert "Resumo da semana" in weekly["message"]
+pron_bootstrap = json.loads(ctx.tools["fluentpilot_pronunciation_bootstrap"]["handler"]({}))
+assert pron_bootstrap["ok"] is True
+assert pathlib.Path(tmp, ".ingles-em-contexto", "PRONUNCIATION_PROFILE.json").exists()
+model = json.loads(ctx.tools["fluentpilot_pronunciation_build_model_audio"]["handler"]({"chunk": "Could you help me", "objective": "travel"}))
+assert model["ok"] is True
+assert model["model_audio"]["tts_text"] == "Could you help me find my hotel?"
+assert model["model_audio"]["max_audio_seconds"] <= 5
+shadow = json.loads(ctx.tools["fluentpilot_pronunciation_build_shadowing_drill"]["handler"]({"chunk": "Could you help me"}))
+assert shadow["ok"] is True
+assert shadow["drill"]["required_repetitions"] == 3
+attempt = json.loads(ctx.tools["fluentpilot_pronunciation_evaluate_student_audio"]["handler"]({"target_text": "Could you help me find my hotel?", "transcript": "could you help me find my hotel"}))
+assert attempt["ok"] is True
+assert attempt["evaluation"]["one_fix_only"] is True
+audio = json.loads(ctx.tools["fluentpilot_cron_daily_audio_nudge"]["handler"]({"objective": "travel"}))
+assert audio["ok"] is True
+assert "tts_text" in audio
+assert "áudio" in audio["message"].lower()
 `
   const result = spawnSync(python, ["-c", script], { cwd: root, encoding: "utf8" })
   assert.equal(result.status, 0, result.stderr || result.stdout)

@@ -54,6 +54,21 @@ Não avance antes de produção oral. Menos consumo, mais geração.
 - Se o aluno está sem energia, use Modo Guerra: 3 minutos, falar 30 segundos, acabou.
 - Ao terminar a missão, mostre progresso como capacidade concreta antes do número. O placar `__/100` não é porcentagem literal de fluência.
 
+## Pronúncia com áudio
+
+Quando TTS/STT estiver disponível no Hermes, use áudio curto como parte da missão:
+
+```text
+ver texto
+ouvir modelo
+repetir 3 vezes
+mandar áudio
+receber 1 correção
+usar em frase própria
+```
+
+Não explique fonética primeiro. Não use IPA por padrão. Corrija no máximo uma coisa por áudio, sempre priorizando inteligibilidade antes de sotaque perfeito.
+
 ## WhatsApp e cron
 
 Quando o Hermes estiver rodando pelo gateway/WhatsApp, o FluentPilot pode ser ativo:
@@ -62,6 +77,7 @@ Quando o Hermes estiver rodando pelo gateway/WhatsApp, o FluentPilot pode ser at
 - check-in de energia;
 - modo retorno após ausência;
 - revisão antes de conteúdo futuro;
+- áudio curto de pronúncia;
 - teste cego mensal;
 - resumo semanal.
 

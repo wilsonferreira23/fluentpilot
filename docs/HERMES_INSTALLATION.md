@@ -135,6 +135,12 @@ O plugin Hermes expõe ferramentas equivalentes às principais ferramentas do Op
 - `fluentpilot_cron_future_review`
 - `fluentpilot_cron_monthly_blind_test`
 - `fluentpilot_cron_weekly_progress_summary`
+- `fluentpilot_cron_daily_audio_nudge`
+- `fluentpilot_pronunciation_bootstrap`
+- `fluentpilot_pronunciation_build_model_audio`
+- `fluentpilot_pronunciation_build_shadowing_drill`
+- `fluentpilot_pronunciation_evaluate_student_audio`
+- `fluentpilot_pronunciation_select_focus`
 
 O comportamento esperado é o mesmo:
 
@@ -189,6 +195,7 @@ fluentpilot-absence-reactivation     12:00 todos os dias
 fluentpilot-future-review            18:00 segunda a sábado
 fluentpilot-monthly-blind-test       08:30 no dia 1 de cada mês
 fluentpilot-weekly-progress-summary  20:00 domingo
+fluentpilot-daily-audio-nudge        08:15 todos os dias
 ```
 
 Cada cron job é autocontido porque o Hermes executa jobs em sessões novas. O job lê `.ingles-em-contexto/`, chama a ferramenta `fluentpilot_cron_*` correspondente e entrega só a mensagem final.
@@ -206,6 +213,49 @@ fluentpilot cron run fluentpilot-daily-mission-nudge
 ```
 
 Se um job não tiver nada útil para enviar, ele responde `[SILENT]` e o Hermes suprime a entrega.
+
+## Pronúncia com áudio
+
+O profile já vem com configuração inicial:
+
+```yaml
+tts:
+  provider: edge
+  edge:
+    voice: en-US-AriaNeural
+
+stt:
+  provider: local
+  language: en
+```
+
+Fluxo pedagógico:
+
+```text
+chunk escolhido
+→ áudio-modelo curto via TTS
+→ aluno repete 3 vezes
+→ aluno manda áudio
+→ STT/transcrição
+→ 1 correção principal
+```
+
+Arquivos locais:
+
+```text
+.ingles-em-contexto/PRONUNCIATION_PROFILE.json
+.ingles-em-contexto/PRONUNCIATION_DRILLS.json
+.ingles-em-contexto/VOICE_ATTEMPTS.jsonl
+```
+
+Regra UX:
+
+- 1 áudio-modelo por missão normal;
+- máximo 2 áudios se houver erro;
+- sem IPA por padrão;
+- sem aula longa de fonética;
+- corrigir inteligibilidade antes de sotaque perfeito;
+- corrigir no máximo uma coisa por áudio.
 
 ## Áudio local
 

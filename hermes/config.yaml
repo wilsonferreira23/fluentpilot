@@ -14,3 +14,14 @@ toolsets:
 cron:
   wrap_response: false
   script_timeout_seconds: 300
+
+tts:
+  provider: "edge"
+  speed: 0.92
+  edge:
+    voice: "en-US-AriaNeural"
+    speed: 0.92
+
+stt:
+  provider: "local"
+  language: "en"

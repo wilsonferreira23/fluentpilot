@@ -62,6 +62,20 @@ Use `snowball_engine_build_captionless_listening_drill` sempre que houver áudio
 
 Texto só aparece depois de tentativas auditivas.
 
+## Pronúncia
+
+Quando TTS estiver disponível, todo chunk novo pode ganhar áudio-modelo curto.
+
+Fluxo:
+
+1. `fluentpilot_pronunciation_build_model_audio`;
+2. mandar ou anexar áudio com `tts_text`;
+3. pedir áudio do aluno de 10 a 20 segundos;
+4. se houver STT/transcrição, usar `fluentpilot_pronunciation_evaluate_student_audio`;
+5. corrigir só uma coisa.
+
+Não corrigir sotaque quando a fala já é compreensível. Corrigir inteligibilidade, ritmo, linking ou stress.
+
 ## Conversa com caos
 
 Use `snowball_engine_build_unpredictable_conversation_drill` para simular:
@@ -100,5 +114,6 @@ Mapeamento:
 - energia: `fluentpilot_cron_energy_checkin`;
 - retorno: `fluentpilot_cron_absence_reactivation`;
 - revisão futura: `fluentpilot_cron_future_review`;
+- áudio de pronúncia: `fluentpilot_cron_daily_audio_nudge`;
 - teste cego mensal: `fluentpilot_cron_monthly_blind_test`;
 - resumo semanal: `fluentpilot_cron_weekly_progress_summary`.

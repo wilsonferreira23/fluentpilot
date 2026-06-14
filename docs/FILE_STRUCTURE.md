@@ -72,3 +72,15 @@ hermes/plugins/fluentpilot -> ~/.hermes/profiles/fluentpilot/plugins/fluentpilot
 O plugin Hermes usa Python e grava no mesmo estado local `.ingles-em-contexto/`.
 
 Se `FLUENTPILOT_INSTALL_CRON=1`, o instalador agenda os jobs com `--deliver "$FLUENTPILOT_CRON_DELIVER"` e `--workdir "$TARGET_DIR"`.
+
+## Estado de pronuncia
+
+O Hermes cria:
+
+```text
+.ingles-em-contexto/PRONUNCIATION_PROFILE.json
+.ingles-em-contexto/PRONUNCIATION_DRILLS.json
+.ingles-em-contexto/VOICE_ATTEMPTS.jsonl
+```
+
+Esses arquivos guardam foco de pronuncia, drills de áudio-modelo e tentativas do aluno.

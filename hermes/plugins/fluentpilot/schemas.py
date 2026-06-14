@@ -266,4 +266,59 @@ TOOLS = [
         "fluentpilot_cron_weekly_progress_summary",
         "Build a concise WhatsApp weekly progress summary from local FluentPilot state.",
     ),
+    _schema(
+        "fluentpilot_cron_daily_audio_nudge",
+        "fluentpilot_cron_daily_audio_nudge",
+        "Build a WhatsApp daily pronunciation nudge with TTS text for Hermes voice delivery.",
+        {
+            "objective": {"type": "string", "enum": ["travel", "conversation", "work", "media", "general"]},
+            "chunk": {"type": "string"},
+        },
+    ),
+    _schema(
+        "fluentpilot_pronunciation_bootstrap",
+        "fluentpilot_pronunciation_bootstrap",
+        "Initialize FluentPilot pronunciation state files.",
+    ),
+    _schema(
+        "fluentpilot_pronunciation_select_focus",
+        "fluentpilot_pronunciation_select_focus",
+        "Select the next pronunciation focus from learner history and chunk.",
+        {
+            "chunk": {"type": "string"},
+            "transcript": {"type": "string"},
+        },
+    ),
+    _schema(
+        "fluentpilot_pronunciation_build_model_audio",
+        "fluentpilot_pronunciation_build_model_audio",
+        "Build a short pronunciation model prompt and TTS payload for one chunk.",
+        {
+            "chunk": {"type": "string"},
+            "objective": {"type": "string", "enum": ["travel", "conversation", "work", "media", "general"]},
+            "preferred_accent": {"type": "string"},
+        },
+        ["chunk"],
+    ),
+    _schema(
+        "fluentpilot_pronunciation_build_shadowing_drill",
+        "fluentpilot_pronunciation_build_shadowing_drill",
+        "Build a three-repetition shadowing drill around one short model sentence.",
+        {
+            "chunk": {"type": "string"},
+            "model_sentence": {"type": "string"},
+        },
+        ["chunk"],
+    ),
+    _schema(
+        "fluentpilot_pronunciation_evaluate_student_audio",
+        "fluentpilot_pronunciation_evaluate_student_audio",
+        "Evaluate a student's transcribed audio with one intelligibility-focused correction.",
+        {
+            "target_text": {"type": "string"},
+            "transcript": {"type": "string"},
+            "audio_path": {"type": "string"},
+        },
+        ["target_text"],
+    ),
 ]

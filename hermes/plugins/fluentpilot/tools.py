@@ -318,12 +318,25 @@ def _ensure_snowball() -> list[str]:
         "CONVERSATION_DRILLS.json": {"schema_version": SCHEMA_VERSION, "history": []},
         "BLIND_TESTS.json": {"schema_version": SCHEMA_VERSION, "tests": [], "last_blind_test_at": None},
         "CRON_NOTIFICATIONS.json": {"schema_version": SCHEMA_VERSION, "history": []},
+        "PRONUNCIATION_PROFILE.json": {
+            "schema_version": SCHEMA_VERSION,
+            "preferred_accent": "american_general",
+            "correction_style": "one_fix_only",
+            "focus": "intelligibility",
+            "problem_patterns": [],
+            "last_audio_attempt_at": None,
+        },
+        "PRONUNCIATION_DRILLS.json": {"schema_version": SCHEMA_VERSION, "history": []},
+        "VOICE_ATTEMPTS.jsonl": "",
     }
     created: list[str] = []
     for name, value in defaults.items():
         path = base / name
         if not path.exists():
-            _write_json(path, value)
+            if name.endswith(".jsonl"):
+                _atomic_write(path, value)
+            else:
+                _write_json(path, value)
             created.append(name)
     metrics = base / "LEARNING_METRICS.jsonl"
     if not metrics.exists():
@@ -416,6 +429,70 @@ def _best_chunk(default: str = "I need to") -> str:
         key = next(iter(mastery.keys()))
         return str(mastery[key].get("term") or key)
     return default
+
+
+def _model_sentence_for(chunk: str, objective: str | None = None) -> str:
+    normalized = _normalize(chunk)
+    if normalized == "could you help me":
+        return "Could you help me find my hotel?"
+    if normalized == "i need to":
+        return "I need to find my hotel."
+    if normalized == "i have no idea":
+        return "I have no idea where it is."
+    if normalized == "you were supposed to":
+        return "You were supposed to call me."
+    if normalized == "i don't feel like" or normalized == "i dont feel like":
+        return "I don't feel like going today."
+    track = _track(objective)
+    context = track["visible_focus"][0]
+    cleaned = chunk.strip().rstrip(".?!")
+    if cleaned.lower().startswith(("i ", "you ", "we ", "they ", "could ", "would ", "can ")):
+        return f"{cleaned}."
+    return f"{cleaned} in a {context} situation."
+
+
+def _pronunciation_focus(chunk: str, transcript: str | None = None) -> dict[str, str]:
+    text = _normalize(f"{chunk} {transcript or ''}")
+    if "need to" in text or "going to" in text or "want to" in text:
+        return {"focus": "linking", "tip": '"need to" soa mais conectado, perto de "need tuh".'}
+    if "could you" in text or "would you" in text:
+        return {"focus": "chunk_rhythm", "tip": '"Could you" precisa sair leve e junto, não palavra por palavra.'}
+    if "supposed to" in text:
+        return {"focus": "stress", "tip": 'Coloque mais força em "supposed" e reduza "to".'}
+    if "th" in text:
+        return {"focus": "consonant", "tip": 'Observe o som de "th"; não precisa perfeito, mas precisa ficar compreensível.'}
+    return {"focus": "rhythm", "tip": "Tente manter ritmo natural e conectar as palavras principais."}
+
+
+def _append_voice_attempt(value: dict[str, Any]) -> None:
+    _append_jsonl(_memory_path("VOICE_ATTEMPTS.jsonl"), {**value, "created_at": _now()})
+    profile = _read_json(_memory_path("PRONUNCIATION_PROFILE.json"), {})
+    profile["last_audio_attempt_at"] = _now()
+    if value.get("focus"):
+        profile["focus"] = value["focus"]
+    if value.get("problem_pattern"):
+        patterns = list(profile.get("problem_patterns", []))
+        if value["problem_pattern"] not in patterns:
+            patterns.append(value["problem_pattern"])
+        profile["problem_patterns"] = patterns[-20:]
+    _write_json(_memory_path("PRONUNCIATION_PROFILE.json"), profile)
+
+
+def _build_model_audio_payload(chunk: str, objective: str | None = None, preferred_accent: str | None = None) -> dict[str, Any]:
+    sentence = _model_sentence_for(chunk, objective)
+    focus = _pronunciation_focus(chunk)
+    return {
+        "chunk": chunk,
+        "model_sentence": sentence,
+        "tts_text": sentence,
+        "preferred_accent": preferred_accent or "american_general",
+        "provider_hint": "hermes_tts",
+        "delivery": "voice_or_audio_attachment",
+        "max_audio_seconds": 5,
+        "learner_instruction": "Ouça o áudio, repita 3 vezes e responda com um áudio de 10 a 20 segundos.",
+        "correction_policy": "one_fix_only",
+        "focus": focus,
+    }
 
 
 def _record_cron_message(kind: str, message: str, silent: bool = False) -> None:
@@ -666,7 +743,8 @@ def snowball_engine_analyze_season(args: dict, **kwargs) -> str:
 def snowball_engine_build_daily_mission(args: dict, **kwargs) -> str:
     try:
         _ensure_snowball()
-        track = _track(args.get("objective", "general"))
+        objective = args.get("objective", "general")
+        track = _track(objective)
         energy = args.get("energy", "medium")
         due_reviews = _parse_array(args.get("due_reviews_json"), [])
         candidate_chunks = _parse_array(args.get("candidate_chunks_json"), [])
@@ -674,6 +752,7 @@ def snowball_engine_build_daily_mission(args: dict, **kwargs) -> str:
         new_chunk = str(candidate_chunks[0] if candidate_chunks else "I need to")
         learner_context = args.get("learner_context") or "sua vida real"
         if energy == "low":
+            pronunciation = _build_model_audio_payload(new_chunk, objective)
             mission = {
                 "id": f"{datetime.now().date()}-{track['id']}-low",
                 "title": "Missão de hoje",
@@ -689,8 +768,10 @@ def snowball_engine_build_daily_mission(args: dict, **kwargs) -> str:
                     {"type": "close", "prompt": "Feche a missão. Hoje era só manter contato."},
                 ],
                 "first_action": f'Repita em voz alta: "{new_chunk}".',
+                "pronunciation": pronunciation,
             }
         else:
+            pronunciation = _build_model_audio_payload(new_chunk, objective)
             mission = {
                 "id": f"{datetime.now().date()}-{track['id']}",
                 "title": "Missão de hoje",
@@ -707,6 +788,7 @@ def snowball_engine_build_daily_mission(args: dict, **kwargs) -> str:
                     {"type": "real_life_speaking", "minutes": 8 if energy == "high" else 5, "prompt": f'Fale por 20 a 40 segundos usando "{new_chunk}" em {learner_context}.'},
                 ],
                 "first_action": f'Como você completaria: "{review_chunk} ___"?',
+                "pronunciation": pronunciation,
             }
         state = _read_json(_memory_path("DAILY_MISSION.json"), {"schema_version": SCHEMA_VERSION, "history": []})
         state["current"] = {**mission, "created_at": _now()}
@@ -1016,6 +1098,129 @@ def snowball_engine_complete_daily_mission(args: dict, **kwargs) -> str:
         return _error("complete_daily_mission_failed", exc)
 
 
+def fluentpilot_pronunciation_bootstrap(args: dict, **kwargs) -> str:
+    try:
+        _ensure_memory()
+        created = _ensure_snowball()
+        return _ok({
+            "schema_version": SCHEMA_VERSION,
+            "created": [name for name in created if name.startswith("PRONUNCIATION") or name.startswith("VOICE_ATTEMPTS")],
+            "profile": _read_json(_memory_path("PRONUNCIATION_PROFILE.json"), {}),
+        })
+    except Exception as exc:
+        return _error("pronunciation_bootstrap_failed", exc)
+
+
+def fluentpilot_pronunciation_select_focus(args: dict, **kwargs) -> str:
+    try:
+        _ensure_snowball()
+        chunk = args.get("chunk") or _best_chunk()
+        focus = _pronunciation_focus(str(chunk), args.get("transcript"))
+        profile = _read_json(_memory_path("PRONUNCIATION_PROFILE.json"), {})
+        profile["focus"] = focus["focus"]
+        _write_json(_memory_path("PRONUNCIATION_PROFILE.json"), profile)
+        return _ok({"chunk": chunk, "focus": focus})
+    except Exception as exc:
+        return _error("pronunciation_focus_failed", exc)
+
+
+def fluentpilot_pronunciation_build_model_audio(args: dict, **kwargs) -> str:
+    try:
+        _ensure_snowball()
+        chunk = str(args["chunk"])
+        payload = _build_model_audio_payload(
+            chunk,
+            args.get("objective", "general"),
+            args.get("preferred_accent"),
+        )
+        state = _read_json(_memory_path("PRONUNCIATION_DRILLS.json"), {"schema_version": SCHEMA_VERSION, "history": []})
+        state.setdefault("history", []).append({"type": "model_audio", **payload, "created_at": _now()})
+        state["history"] = state["history"][-200:]
+        _write_json(_memory_path("PRONUNCIATION_DRILLS.json"), state)
+        return _ok({
+            "model_audio": payload,
+            "message": "\n".join([
+                "Ouça o áudio modelo.",
+                "",
+                f'Frase: "{payload["model_sentence"]}"',
+                "",
+                "Depois responda com um áudio de 10 a 20 segundos.",
+            ]),
+        })
+    except Exception as exc:
+        return _error("model_audio_failed", exc)
+
+
+def fluentpilot_pronunciation_build_shadowing_drill(args: dict, **kwargs) -> str:
+    try:
+        _ensure_snowball()
+        chunk = str(args["chunk"])
+        model_sentence = args.get("model_sentence") or _model_sentence_for(chunk)
+        drill = {
+            "type": "shadowing",
+            "chunk": chunk,
+            "model_sentence": model_sentence,
+            "tts_text": model_sentence,
+            "required_repetitions": 3,
+            "steps": [
+                {"id": "listen", "prompt": "Ouça uma vez sem falar."},
+                {"id": "shadow", "prompt": "Repita junto com o áudio 3 vezes."},
+                {"id": "record", "prompt": "Agora mande um áudio seu de 10 a 20 segundos."},
+            ],
+            "rule": "Sem IPA e sem aula longa; áudio curto, repetição e uso.",
+        }
+        state = _read_json(_memory_path("PRONUNCIATION_DRILLS.json"), {"schema_version": SCHEMA_VERSION, "history": []})
+        state.setdefault("history", []).append({**drill, "created_at": _now()})
+        state["history"] = state["history"][-200:]
+        _write_json(_memory_path("PRONUNCIATION_DRILLS.json"), state)
+        return _ok({"drill": drill})
+    except Exception as exc:
+        return _error("shadowing_drill_failed", exc)
+
+
+def fluentpilot_pronunciation_evaluate_student_audio(args: dict, **kwargs) -> str:
+    try:
+        _ensure_snowball()
+        target = str(args["target_text"])
+        transcript = str(args.get("transcript") or "").strip()
+        target_tokens = set(_tokenize(target))
+        transcript_tokens = set(_tokenize(transcript))
+        overlap = len(target_tokens & transcript_tokens) / max(1, len(target_tokens))
+        focus = _pronunciation_focus(target, transcript)
+        if not transcript:
+            status = "needs_audio_or_transcript"
+            feedback = "Não recebi transcrição do áudio. Mande um áudio curto ou uma transcrição para eu avaliar."
+            correction = "Envie uma tentativa de 10 a 20 segundos."
+        elif overlap >= 0.75:
+            status = "comprehensible"
+            feedback = "Boa. Ficou compreensível."
+            correction = focus["tip"]
+        elif overlap >= 0.45:
+            status = "partially_comprehensible"
+            feedback = "Deu para entender parte da frase."
+            correction = f'Priorize repetir o bloco inteiro: "{target}".'
+        else:
+            status = "unclear"
+            feedback = "Ainda ficou pouco claro."
+            correction = f'Volte para o áudio modelo e repita só esta frase: "{target}".'
+        evaluation = {
+            "target_text": target,
+            "transcript": transcript,
+            "audio_path": args.get("audio_path"),
+            "status": status,
+            "intelligibility_score": round(overlap, 3),
+            "one_fix_only": True,
+            "focus": focus["focus"],
+            "feedback": feedback,
+            "correction": correction,
+            "next_action": f'Repita: "{target}"',
+        }
+        _append_voice_attempt({**evaluation, "problem_pattern": focus["focus"]})
+        return _ok({"evaluation": evaluation})
+    except Exception as exc:
+        return _error("student_audio_evaluation_failed", exc)
+
+
 def fluentpilot_cron_daily_nudge(args: dict, **kwargs) -> str:
     try:
         _ensure_memory()
@@ -1050,6 +1255,39 @@ def fluentpilot_cron_daily_nudge(args: dict, **kwargs) -> str:
         return _ok({"message": message, "mission": mission})
     except Exception as exc:
         return _error("daily_nudge_failed", exc)
+
+
+def fluentpilot_cron_daily_audio_nudge(args: dict, **kwargs) -> str:
+    try:
+        _ensure_memory()
+        _ensure_snowball()
+        objective = args.get("objective", "general")
+        chunk = args.get("chunk") or _best_chunk("Could you help me")
+        audio = _build_model_audio_payload(str(chunk), objective)
+        message = "\n".join([
+            "Treino de pronúncia de hoje",
+            "Tempo: 4 minutos",
+            "",
+            "Hoje você vai fazer:",
+            f'Ouvir e repetir "{audio["model_sentence"]}".',
+            "",
+            "Por quê:",
+            "Um áudio curto no momento certo ajuda seu ouvido e sua boca a automatizarem o chunk.",
+            "",
+            "Áudio modelo:",
+            audio["tts_text"],
+            "",
+            "Agora responda com um áudio de 10 a 20 segundos usando essa frase.",
+        ])
+        _record_cron_message("daily_audio_nudge", message)
+        return _ok({
+            "message": message,
+            "tts_text": audio["tts_text"],
+            "audio_delivery": "hermes_tts",
+            "model_audio": audio,
+        })
+    except Exception as exc:
+        return _error("daily_audio_nudge_failed", exc)
 
 
 def fluentpilot_cron_energy_checkin(args: dict, **kwargs) -> str:

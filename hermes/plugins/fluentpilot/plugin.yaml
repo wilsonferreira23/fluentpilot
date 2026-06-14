@@ -30,3 +30,9 @@ provides_tools:
   - fluentpilot_cron_future_review
   - fluentpilot_cron_monthly_blind_test
   - fluentpilot_cron_weekly_progress_summary
+  - fluentpilot_cron_daily_audio_nudge
+  - fluentpilot_pronunciation_bootstrap
+  - fluentpilot_pronunciation_build_model_audio
+  - fluentpilot_pronunciation_build_shadowing_drill
+  - fluentpilot_pronunciation_evaluate_student_audio
+  - fluentpilot_pronunciation_select_focus

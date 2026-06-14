@@ -85,6 +85,32 @@ Ordem:
 3. shadowing curto;
 4. texto só depois da tentativa.
 
+## Pronúncia com TTS/STT
+
+Use:
+
+- `fluentpilot_pronunciation_bootstrap`
+- `fluentpilot_pronunciation_build_model_audio`
+- `fluentpilot_pronunciation_build_shadowing_drill`
+- `fluentpilot_pronunciation_evaluate_student_audio`
+
+Regra UX:
+
+- um áudio-modelo por missão normal;
+- máximo dois áudios se o aluno errar;
+- correção de no máximo uma coisa;
+- sem IPA por padrão;
+- sem aula longa de fonética;
+- inteligibilidade antes de sotaque perfeito.
+
+Formato:
+
+```text
+Ouça o áudio.
+Repita 3 vezes.
+Me mande um áudio de 10 a 20 segundos.
+```
+
 ## Conversação imprevisível
 
 Use `snowball_engine_build_unpredictable_conversation_drill`.
@@ -123,6 +149,7 @@ Jobs padrão:
 - `fluentpilot-energy-checkin`: pergunta energia.
 - `fluentpilot-absence-reactivation`: ativa Modo Retorno após ausência.
 - `fluentpilot-future-review`: antecipa revisão que vai reaparecer.
+- `fluentpilot-daily-audio-nudge`: envia áudio curto de pronúncia.
 - `fluentpilot-monthly-blind-test`: cobra teste cego mensal.
 - `fluentpilot-weekly-progress-summary`: resume a semana.
 

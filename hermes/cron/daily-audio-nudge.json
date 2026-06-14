@@ -1,0 +1,9 @@
+{
+  "name": "fluentpilot-daily-audio-nudge",
+  "schedule": "15 8 * * *",
+  "deliver_default": "whatsapp",
+  "skill": "fluentpilot",
+  "workdir": "$FLUENTPILOT_HOME",
+  "prompt": "Você está rodando como cron isolado do FluentPilot. Não dependa do histórico da conversa. Use fluentpilot_cron_daily_audio_nudge para ler .ingles-em-contexto e gerar um treino curto de pronúncia com tts_text. Se o tool de Text-to-Speech do Hermes estiver disponível, gere áudio a partir de tts_text e entregue junto com a mensagem. Responda somente com o campo message retornado pela ferramenta e anexe ou use TTS para o campo tts_text quando o Hermes permitir. Final answer deve ser a mensagem crua para WhatsApp."
+}
+

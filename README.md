@@ -75,6 +75,7 @@ No Hermes, ele também pode agir pelo WhatsApp com cron jobs:
 - perguntar energia;
 - chamar Modo Retorno se você sumir;
 - antecipar revisão antes de reaparecer no conteúdo;
+- mandar áudio-modelo de pronúncia;
 - cobrar teste cego mensal;
 - resumir a semana.
 
@@ -103,6 +104,19 @@ ouvir detalhes
 fazer shadowing curto
 ver o texto depois
 ```
+
+### Pronúncia por áudio
+
+No Hermes, quando TTS/STT estiverem ativos, o agente pode mandar um áudio curto de modelo:
+
+```text
+ouça
+repita 3 vezes
+mande um áudio
+receba 1 correção
+```
+
+Regra: corrigir inteligibilidade antes de sotaque perfeito.
 
 ### Conversação imprevisível
 
@@ -166,6 +180,7 @@ Por dentro, o projeto usa:
 - **Hermes profile**: distribuição em `hermes/` com `SOUL.md`, `AGENTS.md`, skill e plugin Python.
 - **Hermes plugin**: ferramentas determinísticas em `hermes/plugins/fluentpilot/`.
 - **Hermes cron**: nudges automáticos via gateway, incluindo WhatsApp.
+- **Hermes TTS/STT**: áudio-modelo e avaliação simples da fala quando voz estiver configurada.
 - **Node.js test runner**: testes com `node --test`, sem framework pesado.
 - **JSON local**: progresso, missões, revisão e métricas ficam em `.ingles-em-contexto/`.
 - **ffmpeg opcional**: extração de pequenos trechos de áudio quando o usuário fornece mídia local.
@@ -183,6 +198,7 @@ snowball_engine.ts   tools OpenCode + persistência
 media_clips.ts       áudio local opcional
 hermes/plugins/      plugin Python para Hermes
 hermes/cron/         templates de nudges automáticos
+PRONUNCIATION_*      estado local de pronúncia
 ```
 
 Isso permite testar a lógica do método sem depender da resposta criativa de uma LLM.
@@ -372,6 +388,8 @@ FLUENTPILOT_INSTALL_CRON=1 FLUENTPILOT_CRON_DELIVER=whatsapp ./install-hermes.sh
 hermes gateway start
 ```
 
+O cron `fluentpilot-daily-audio-nudge` usa o TTS do Hermes quando disponível para mandar uma frase-modelo curta.
+
 Guia completo: [`docs/HERMES_INSTALLATION.md`](docs/HERMES_INSTALLATION.md).
 
 ## Como funciona por dentro
@@ -384,6 +402,7 @@ O agente combina:
 - revisão acionada por episódios futuros;
 - speaking obrigatório;
 - listening sem legenda;
+- áudio curto de pronúncia;
 - transferência para vida real;
 - score funcional não literal;
 - modos para baixa energia e retorno;
